@@ -161,7 +161,7 @@ def generate_dataset(output_path: str = None) -> pd.DataFrame:
     # Ensure output directory exists
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     df.to_csv(out_path, index=False)
-    logger.info(f"Dataset saved → {out_path}  ({len(df)} rows, {df['label'].sum()} malicious)")
+    logger.info(f"Dataset saved to {out_path}  ({len(df)} rows, {df['label'].sum()} malicious)")
 
     return df
 

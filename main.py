@@ -41,7 +41,9 @@ def _setup_logging():
     except Exception:
         level, to_file, log_path = logging.INFO, False, None
 
-    handlers = [logging.StreamHandler(sys.stdout)]
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
+    handlers = [stdout_handler]
 
     if to_file and log_path:
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -70,7 +72,7 @@ REQUIRED_PACKAGES = [
     ("yaml",          "pyyaml"),
     ("pandas",        "pandas"),
     ("numpy",         "numpy"),
-    ("sklearn",       "scikit-learn"),
+    # sklearn/scipy checked lazily (only needed by data pipeline, not UI startup)
 ]
 
 def _check_dependencies():
@@ -84,6 +86,11 @@ def _check_dependencies():
         print("ERROR: Missing required packages. Install them with:")
         print(f"  pip install {' '.join(missing)}")
         sys.exit(1)
+    # Warn (don't crash) if sklearn is broken — data pipeline unavailable
+    try:
+        import sklearn  # noqa: F401
+    except Exception as e:
+        logger.warning(f"scikit-learn unavailable (data pipeline disabled): {e}")
 
 _check_dependencies()
 
@@ -92,6 +99,12 @@ _check_dependencies()
 # ---------------------------------------------------------------------------
 
 def _ensure_dataset():
+    try:
+        import sklearn  # noqa: F401
+    except Exception:
+        logger.warning("scikit-learn unavailable — skipping dataset generation (UI will still launch)")
+        return
+
     import yaml
     cfg_path = ROOT / "configs" / "thresholds.yaml"
     with open(cfg_path, "r") as f:
