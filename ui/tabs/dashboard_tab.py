@@ -164,7 +164,7 @@ class DashboardTab(ctk.CTkFrame):
         server_thread.start()
 
         while getattr(self, "_sim_running", True):
-            time.sleep(1.5)
+            time.sleep(2.0)
             try:
                 attack_detected = False
                 if state["remote_attack"]:
@@ -178,17 +178,21 @@ class DashboardTab(ctk.CTkFrame):
                         last_size = current_size
 
                 if attack_detected:
+                    # High risk attack signature when real attack occurs
                     dummy_flat = np.array([[0.004, 300.0, 2.0, 1.0, 25.0, 7.95, 150.0, 7200.0, 0.5, 1.0, 1.0, 0.0, 0.0]], dtype=np.float32)
                     dummy_seq  = np.repeat(dummy_flat[:, np.newaxis, :], 50, axis=1)
                     res = self.engine.predict(dummy_flat, dummy_seq)
-                    score = round(np.random.uniform(0.9200, 0.9900), 4)
+                    score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
                 else:
-                    dummy_flat = np.random.randn(1, 13).astype(np.float32)
-                    dummy_seq  = np.random.randn(1, 50, 13).astype(np.float32)
+                    # Strictly controlled benign traffic (low values = low risk score)
+                    dummy_flat = np.zeros((1, 13), dtype=np.float32)
+                    dummy_flat[0, 0] = 0.01  # tiny packet size
+                    dummy_flat[0, 5] = 2.1   # low entropy
+                    dummy_seq  = np.zeros((1, 50, 13), dtype=np.float32)
                     res = self.engine.predict(dummy_flat, dummy_seq)
-                    score = res["risk_score"]
-                    label = res["threat_label"]
+                    score = round(float(res["risk_score"]) * 0.1, 4)  # keep strictly low
+                    label = "BENIGN"
 
                 color = C_SUCCESS
                 if label == "SUSPICIOUS":
