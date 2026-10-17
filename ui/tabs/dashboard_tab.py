@@ -170,10 +170,6 @@ class DashboardTab(ctk.CTkFrame):
                 score = res["risk_score"]
                 label = res["threat_label"]
 
-                if attack_detected_by_file:
-                    score = max(score, 0.8921)
-                    label = "CONFIRMED EXFILTRATION"
-
                 color = C_SUCCESS
                 if label == "SUSPICIOUS":
                     color = C_WARNING
