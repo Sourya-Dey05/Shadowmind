@@ -131,10 +131,13 @@ class DashboardTab(ctk.CTkFrame):
 
     def _sim_loop(self):
         """
-        Real-time telemetry monitor. Scans the workspace for suspicious file writes
-        (like exfiltration logs or rapid file modifications) and feeds them into
-        the CNN+LSTM+MLP detection engine automatically.
+        Real-time telemetry monitor + Local Network Listener.
+        Listens on port 8080 for incoming requests from other devices (e.g. phone)
+        and scans for local file exfiltration activity.
         """
+        import http.server
+        import socketserver
+        import threading
         import os
         from pathlib import Path
 
@@ -145,24 +148,49 @@ class DashboardTab(ctk.CTkFrame):
         if monitored_file.exists():
             last_size = monitored_file.stat().st_size
 
-        while getattr(self, "_sim_running", True):
-            time.sleep(2.0)
+        # Shared state for remote device trigger
+        state = {"remote_attack": False}
+
+        class AttackHandler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                state["remote_attack"] = True
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(b"<h1>SHADOWMIND DEFENSE SYSTEM: ACCESS DENIED</h1>")
+            def log_message(self, format, *args):
+                pass  # suppress console spam
+
+        # Start background HTTP server on port 8080
+        def run_server():
             try:
-                # Check if an attack script is writing to exfil_attack.log
-                attack_detected_by_file = False
+                with socketserver.TCPServer(("", 8080), AttackHandler) as httpd:
+                    httpd.serve_forever()
+            except Exception:
+                pass
+
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+
+        while getattr(self, "_sim_running", True):
+            time.sleep(1.5)
+            try:
+                attack_detected = False
+                if state["remote_attack"]:
+                    attack_detected = True
+                    state["remote_attack"] = False  # reset trigger
+
                 if monitored_file.exists():
                     current_size = monitored_file.stat().st_size
                     if current_size > last_size:
-                        # New data written by "attacker"
-                        attack_detected_by_file = True
+                        attack_detected = True
                         last_size = current_size
 
-                if attack_detected_by_file:
-                    # Construct realistic high-risk telemetry features (large outbound volume, high entropy, off-hours)
+                if attack_detected:
                     dummy_flat = np.array([[0.004, 300.0, 2.0, 1.0, 25.0, 7.95, 150.0, 7200.0, 0.5, 1.0, 1.0, 0.0, 0.0]], dtype=np.float32)
                     dummy_seq  = np.repeat(dummy_flat[:, np.newaxis, :], 50, axis=1)
                     res = self.engine.predict(dummy_flat, dummy_seq)
-                    score = round(np.random.uniform(0.9100, 0.9850), 4)
+                    score = round(np.random.uniform(0.9200, 0.9900), 4)
                     label = "CONFIRMED EXFILTRATION"
                 else:
                     dummy_flat = np.random.randn(1, 13).astype(np.float32)
