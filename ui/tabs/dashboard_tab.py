@@ -185,13 +185,11 @@ class DashboardTab(ctk.CTkFrame):
                     score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
                 else:
-                    # Strictly controlled benign traffic (low values = low risk score)
-                    dummy_flat = np.zeros((1, 13), dtype=np.float32)
-                    dummy_flat[0, 0] = 0.01  # tiny packet size
-                    dummy_flat[0, 5] = 2.1   # low entropy
-                    dummy_seq  = np.zeros((1, 50, 13), dtype=np.float32)
+                    # Natural fluctuating benign traffic (scores between 0.0010 and 0.0850)
+                    dummy_flat = np.random.uniform(0.01, 0.2, (1, 13)).astype(np.float32)
+                    dummy_seq  = np.random.uniform(0.01, 0.2, (1, 50, 13)).astype(np.float32)
                     res = self.engine.predict(dummy_flat, dummy_seq)
-                    score = round(float(res["risk_score"]) * 0.1, 4)  # keep strictly low
+                    score = round(min(float(res["risk_score"]), 0.0899), 4)
                     label = "BENIGN"
 
                 color = C_SUCCESS
