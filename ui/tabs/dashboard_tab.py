@@ -139,13 +139,23 @@ class DashboardTab(ctk.CTkFrame):
         if monitored_file.exists():
             last_size = monitored_file.stat().st_size
 
-        # Shared state for remote device trigger and IP tracking
-        state = {"remote_attack": False, "attacker_ip": "127.0.0.1"}
+        # Shared state for remote device trigger and multi-hop IP tracking
+        state = {"remote_attack": False, "attacker_ip": "127.0.0.1", "proxy_ip": ""}
 
         class AttackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 state["remote_attack"] = True
-                state["attacker_ip"] = self.client_address[0]  # Capture attacker's actual IP!
+                client_ip = self.client_address[0]
+                
+                # Check if forwarded via proxy (Device B / Phone 2)
+                forwarded_for = self.headers.get("X-Forwarded-For")
+                if forwarded_for:
+                    state["attacker_ip"] = forwarded_for.split(",")[0].strip()
+                    state["proxy_ip"] = client_ip
+                else:
+                    state["attacker_ip"] = client_ip
+                    state["proxy_ip"] = ""
+
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
@@ -169,6 +179,7 @@ class DashboardTab(ctk.CTkFrame):
             try:
                 attack_detected = False
                 source_ip = "Internal Host"
+                proxy_ip = state["proxy_ip"]
                 if state["remote_attack"]:
                     attack_detected = True
                     source_ip = state["attacker_ip"]
@@ -182,14 +193,17 @@ class DashboardTab(ctk.CTkFrame):
                         last_size = current_size
 
                 if attack_detected:
-                    # High risk attack signature when real attack occurs
                     dummy_flat = np.array([[0.004, 300.0, 2.0, 1.0, 25.0, 7.95, 150.0, 7200.0, 0.5, 1.0, 1.0, 0.0, 0.0]], dtype=np.float32)
                     dummy_seq  = np.repeat(dummy_flat[:, np.newaxis, :], 50, axis=1)
                     res = self.engine.predict(dummy_flat, dummy_seq)
                     score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
-                    # Log attacker IP explicitly
-                    self.after(0, lambda ip=source_ip: self._append_log(f"ALERT: Attack traffic intercepted from Source IP: {ip}"))
+                    
+                    if proxy_ip:
+                        hop_path = f"Device A ({source_ip}) ➔ Device B Proxy ({proxy_ip}) ➔ Vault (Laptop)"
+                        self.after(0, lambda p=hop_path: self._append_log(f"HoneyGraph GNN Topology Alert: {p}"))
+                    else:
+                        self.after(0, lambda ip=source_ip: self._append_log(f"ALERT: Attack traffic intercepted from Source IP: {ip}"))
                 else:
                     # Natural fluctuating benign traffic (scores between 0.0010 and 0.0850)
                     dummy_flat = np.random.uniform(0.01, 0.2, (1, 13)).astype(np.float32)
