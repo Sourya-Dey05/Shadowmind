@@ -1,0 +1,361 @@
+================================================================================
+SHADOWMIND — PHASE-BY-PHASE PROJECT STRUCTURE
+Group GRP-45 | Author: Sourya Dey | Date: 2026-09-09
+================================================================================
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 0 — FOUNDATION
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── configs/
+│   └── thresholds.yaml              # detection thresholds, TTL duration, key rotation params
+├── data/
+│   ├── raw/                         # placeholder for real packet captures
+│   └── processed/
+│       └── synthetic_traffic.csv    # labeled benign + slow-exfil dataset
+├── src/
+│   └── data/
+│       ├── generator.py             # synthetic traffic generator
+│       └── preprocessor.py          # feature extraction (packet size, entropy, inter-arrival)
+├── ui/
+│   └── main_window.py               # CustomTkinter app skeleton with tab layout
+├── main.py                          # entry point — launches the desktop app
+└── tests/
+    └── __init__.py
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 1 — AI DETECTION ENGINE
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── configs/
+│   └── thresholds.yaml
+├── data/
+│   ├── raw/
+│   └── processed/
+│       └── synthetic_traffic.csv
+├── src/
+│   ├── data/
+│   │   ├── generator.py
+│   │   └── preprocessor.py
+│   └── detection/
+│       ├── __init__.py
+│       ├── cnn.py                   # spatial anomaly detector (packet size, port fan-out)
+│       ├── lstm.py                  # temporal anomaly detector (beacon patterns, time drift)
+│       ├── mlp.py                   # fusion layer — CNN + LSTM embeddings → risk score
+│       ├── engine.py                # orchestrates CNN→LSTM→MLP, outputs risk label
+│       └── evaluate.py              # confusion matrix, F1, accuracy reporting
+├── notebooks/
+│   └── 01_detection_cnn_lstm_mlp.ipynb
+├── ui/
+│   ├── main_window.py
+│   └── tabs/
+│       └── dashboard_tab.py         # live threat score graph, session status
+├── models/
+│   └── detection/
+│       ├── cnn.pt                   # saved CNN weights
+│       ├── lstm.pt                  # saved LSTM weights
+│       └── mlp.pt                   # saved MLP weights
+├── main.py
+└── tests/
+    ├── __init__.py
+    └── test_detection.py            # unit tests for risk score output
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 2 — HONEYGRAPH GNN
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── configs/
+│   └── thresholds.yaml
+├── data/
+│   ├── raw/
+│   └── processed/
+│       ├── synthetic_traffic.csv
+│       └── synthetic_graph.json     # graph representation of host/flow topology
+├── src/
+│   ├── data/
+│   │   ├── generator.py
+│   │   ├── preprocessor.py
+│   │   └── graph_builder.py         # builds host/flow graph from traffic data
+│   └── detection/
+│       ├── __init__.py
+│       ├── cnn.py
+│       ├── lstm.py
+│       ├── mlp.py                   # upgraded: CNN + LSTM + GNN embeddings → risk score
+│       ├── gnn.py                   # HoneyGraph — PyTorch Geometric message passing
+│       ├── engine.py                # updated orchestrator (adds GNN pass)
+│       └── evaluate.py
+├── notebooks/
+│   ├── 01_detection_cnn_lstm_mlp.ipynb
+│   └── 02_honeygraph_gnn.ipynb
+├── ui/
+│   ├── main_window.py
+│   └── tabs/
+│       └── dashboard_tab.py
+├── models/
+│   └── detection/
+│       ├── cnn.pt
+│       ├── lstm.pt
+│       ├── mlp.pt
+│       └── gnn.pt                   # saved GNN weights
+├── main.py
+└── tests/
+    ├── __init__.py
+    ├── test_detection.py
+    └── test_gnn.py                  # graph construction + message passing tests
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 3 — POISON PILL VAULT
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── configs/
+│   └── thresholds.yaml
+├── data/
+│   ├── raw/
+│   └── processed/
+│       ├── synthetic_traffic.csv
+│       └── synthetic_graph.json
+├── src/
+│   ├── data/
+│   │   ├── generator.py
+│   │   ├── preprocessor.py
+│   │   └── graph_builder.py
+│   ├── detection/
+│   │   ├── __init__.py
+│   │   ├── cnn.py
+│   │   ├── lstm.py
+│   │   ├── mlp.py
+│   │   ├── gnn.py
+│   │   ├── engine.py
+│   │   └── evaluate.py
+│   └── vault/
+│       ├── __init__.py
+│       ├── keygen.py                # GAN-based (or crypto-secure) per-session key generation
+│       ├── aes_vault.py             # AES-256 encrypt/decrypt for protected files
+│       ├── session_manager.py       # issues keys on login, tracks active sessions
+│       ├── rotation.py              # emergency re-encryption on confirmed exfiltration
+│       └── ttl_destruct.py          # TTL timer → zero-wipe key from RAM on expiry
+├── notebooks/
+│   ├── 01_detection_cnn_lstm_mlp.ipynb
+│   ├── 02_honeygraph_gnn.ipynb
+│   └── 03_poison_pill_vault.ipynb
+├── ui/
+│   ├── main_window.py
+│   └── tabs/
+│       ├── dashboard_tab.py
+│       └── vault_tab.py             # protected files list, key status, TTL countdown timer
+├── models/
+│   └── detection/
+│       ├── cnn.pt
+│       ├── lstm.pt
+│       ├── mlp.pt
+│       └── gnn.pt
+├── main.py
+└── tests/
+    ├── __init__.py
+    ├── test_detection.py
+    ├── test_gnn.py
+    ├── test_vault.py                # encrypt/decrypt round-trip tests
+    └── test_ttl_wipe.py             # verifies key bytes are zeroed after TTL expiry
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 4 — DYNAMIC HONEYPOT
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── configs/
+│   └── thresholds.yaml
+├── data/
+│   ├── raw/
+│   └── processed/
+│       ├── synthetic_traffic.csv
+│       └── synthetic_graph.json
+├── src/
+│   ├── data/
+│   │   ├── generator.py
+│   │   ├── preprocessor.py
+│   │   └── graph_builder.py
+│   ├── detection/
+│   │   ├── __init__.py
+│   │   ├── cnn.py
+│   │   ├── lstm.py
+│   │   ├── mlp.py
+│   │   ├── gnn.py
+│   │   ├── engine.py
+│   │   └── evaluate.py
+│   ├── vault/
+│   │   ├── __init__.py
+│   │   ├── keygen.py
+│   │   ├── aes_vault.py
+│   │   ├── session_manager.py
+│   │   ├── rotation.py
+│   │   └── ttl_destruct.py
+│   └── honeypot/
+│       ├── __init__.py
+│       ├── decoy_manager.py         # creates/removes fake files, shares, credentials
+│       ├── interaction_log.py       # logs attacker actions inside the honeypot
+│       ├── ml_adapter.py            # reads attacker behavior → adjusts decoy realism/placement
+│       └── redirector.py            # steers suspicious traffic away from real assets → decoys
+├── notebooks/
+│   ├── 01_detection_cnn_lstm_mlp.ipynb
+│   ├── 02_honeygraph_gnn.ipynb
+│   └── 03_poison_pill_vault.ipynb
+├── ui/
+│   ├── main_window.py
+│   └── tabs/
+│       ├── dashboard_tab.py
+│       ├── vault_tab.py
+│       └── honeypot_tab.py          # active decoys list, attacker interaction live log
+├── models/
+│   └── detection/
+│       ├── cnn.pt
+│       ├── lstm.pt
+│       ├── mlp.pt
+│       └── gnn.pt
+├── main.py
+└── tests/
+    ├── __init__.py
+    ├── test_detection.py
+    ├── test_gnn.py
+    ├── test_vault.py
+    ├── test_ttl_wipe.py
+    └── test_honeypot.py             # decoy creation, redirect, interaction logging
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 5 — FULL INTEGRATION (FINAL STRUCTURE)
+--------------------------------------------------------------------------------
+
+Shadowmind/
+├── README.md
+├── requirements.txt
+├── main.py                          # entry point
+├── configs/
+│   └── thresholds.yaml
+├── data/
+│   ├── raw/
+│   └── processed/
+│       ├── synthetic_traffic.csv
+│       └── synthetic_graph.json
+├── src/
+│   ├── data/
+│   │   ├── generator.py
+│   │   ├── preprocessor.py
+│   │   └── graph_builder.py
+│   ├── detection/
+│   │   ├── __init__.py
+│   │   ├── cnn.py
+│   │   ├── lstm.py
+│   │   ├── mlp.py
+│   │   ├── gnn.py
+│   │   ├── engine.py
+│   │   └── evaluate.py
+│   ├── vault/
+│   │   ├── __init__.py
+│   │   ├── keygen.py
+│   │   ├── aes_vault.py
+│   │   ├── session_manager.py
+│   │   ├── rotation.py
+│   │   └── ttl_destruct.py
+│   ├── honeypot/
+│   │   ├── __init__.py
+│   │   ├── decoy_manager.py
+│   │   ├── interaction_log.py
+│   │   ├── ml_adapter.py
+│   │   └── redirector.py
+│   └── orchestrator.py              # single pipeline: traffic → score → response
+├── ui/
+│   ├── main_window.py
+│   └── tabs/
+│       ├── dashboard_tab.py
+│       ├── vault_tab.py
+│       ├── honeypot_tab.py
+│       └── settings_tab.py          # thresholds, TTL duration, monitored folders
+├── models/
+│   └── detection/
+│       ├── cnn.pt
+│       ├── lstm.pt
+│       ├── mlp.pt
+│       └── gnn.pt
+├── notebooks/
+│   ├── 01_detection_cnn_lstm_mlp.ipynb
+│   ├── 02_honeygraph_gnn.ipynb
+│   └── 03_poison_pill_vault.ipynb
+└── tests/
+    ├── __init__.py
+    ├── test_detection.py
+    ├── test_gnn.py
+    ├── test_vault.py
+    ├── test_ttl_wipe.py
+    └── test_honeypot.py
+
+
+--------------------------------------------------------------------------------
+AFTER PHASE 6 — HARDENED & VALIDATED (SUBMISSION-READY)
+--------------------------------------------------------------------------------
+
+Same as Phase 5, with these additions:
+
+Shadowmind/
+├── ...
+├── docs/
+│   ├── SHADOWMIND_GRP-45.pdf        # original design deck
+│   ├── demo_script.md               # step-by-step teacher demo guide
+│   └── accuracy_report.md           # benchmarks on synthetic + public dataset
+├── configs/
+│   ├── thresholds.yaml
+│   └── thresholds_tuned.yaml        # optimized after validation
+└── tests/
+    ├── ...
+    └── test_integration.py          # end-to-end attack scenario test
+
+
+================================================================================
+FILE COUNT BY PHASE
+================================================================================
+
+  Phase 0  —  Foundation              :   7 new files  |   7 total
+  Phase 1  —  AI Detection Engine     :   9 new files  |  16 total
+  Phase 2  —  HoneyGraph GNN          :   4 new files  |  20 total
+  Phase 3  —  Poison Pill Vault       :   8 new files  |  28 total
+  Phase 4  —  Dynamic Honeypot        :   6 new files  |  34 total
+  Phase 5  —  Full Integration        :   2 new files  |  36 total
+  Phase 6  —  Hardened & Validated    :   4 new files  |  40 total
+
+
+================================================================================
+KEY FILES QUICK REFERENCE
+================================================================================
+
+  main.py                        — launches the desktop app
+  configs/thresholds.yaml        — all tunable parameters in one place
+  src/orchestrator.py            — single pipeline wiring all modules together
+  src/detection/engine.py        — CNN + LSTM + GNN → risk score
+  src/vault/ttl_destruct.py      — TTL self-destruct, RAM key wipe
+  src/vault/rotation.py          — emergency key rotation on breach
+  src/honeypot/redirector.py     — steers attacker traffic to decoys
+  ui/main_window.py              — CustomTkinter desktop app entry
+  tests/test_ttl_wipe.py         — verifies key bytes are zeroed after session expiry
+  tests/test_integration.py      — full end-to-end attack scenario test
+
+================================================================================
+END OF DOCUMENT
+================================================================================
