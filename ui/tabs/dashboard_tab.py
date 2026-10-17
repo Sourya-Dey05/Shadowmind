@@ -67,16 +67,7 @@ class DashboardTab(ctk.CTkFrame):
             graph_frame,
             text="Ensemble: SpatialCNN + TemporalLSTM + FusionMLP\nEvaluates network traffic flows in real time.",
             font=ctk.CTkFont(size=11), text_color=C_SUBTEXT, justify="center"
-        ).place(relx=0.5, rely=0.6, anchor="center")
-
-        # Attack simulation trigger button for demo
-        ctk.CTkButton(
-            graph_frame, text="⚡ SIMULATE ATTACK SPIKE",
-            command=self._trigger_attack_spike,
-            fg_color=C_DANGER, hover_color="#cc0000",
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8
-        ).place(relx=0.5, rely=0.82, anchor="center")
+        ).place(relx=0.5, rely=0.7, anchor="center")
 
         # --- Event log ---
         log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
@@ -216,28 +207,6 @@ class DashboardTab(ctk.CTkFrame):
             self._append_log(f"Traffic evaluated — Score: {score:.4f} | Status: {label}")
         except Exception:
             pass
-
-    def _trigger_attack_spike(self):
-        """Manually trigger a simulated attack spike for demo purposes."""
-        self._append_log("ALERT: Manual attack spike triggered!")
-        try:
-            # Generate feature vector resembling slow exfiltration (high entropy, off-hours, small packets, high port fan-out)
-            spike_flat = np.array([[0.002, 1800.0, 3.0, 1.0, 18.0, 7.9, 0.001, 14400.0, 0.8, 1.0, 1.0, 0.0, 0.0]], dtype=np.float32)
-            spike_seq  = np.repeat(spike_flat[:, np.newaxis, :], 50, axis=1)
-
-            res = self.engine.predict(spike_flat, spike_seq)
-            score = res["risk_score"]
-            label = res["threat_label"]
-            
-            # For demo impact, ensure score reflects confirmed if triggered manually
-            if score < 0.75:
-                score = 0.8942
-                label = "CONFIRMED EXFILTRATION"
-
-            self._update_ui_score(score, label, C_DANGER)
-            self._append_log(f"ATTACK DETECTED — Score: {score:.4f} | Status: {label}")
-        except Exception as e:
-            self._append_log(f"Attack simulation error: {e}")
 
     def destroy(self):
         self._sim_running = False
