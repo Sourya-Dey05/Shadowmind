@@ -43,10 +43,10 @@ FEATURE_COLS = [
 
 LABEL_COL = "label"
 
-def load_cicids_sample(sample_size_per_file: int = 5000) -> pd.DataFrame:
+def load_cicids_sample(sample_size_per_file: int = 3000) -> pd.DataFrame:
     """
-    Load a balanced sample from CICIDS2017 CSV files (Benign + Attacks).
-    Maps CICIDS columns to ShadowMind's standardized feature format.
+    Load samples from CICIDS2017 CSV files and ensure a balanced 50/50 class distribution
+    between Benign and Malicious traffic for robust training and evaluation.
     """
     if not RAW_CICIDS_DIR.exists() or not list(RAW_CICIDS_DIR.glob("*.csv")):
         logger.warning("CICIDS2017 raw files not found. Falling back to synthetic generator.")
@@ -54,32 +54,24 @@ def load_cicids_sample(sample_size_per_file: int = 5000) -> pd.DataFrame:
         return generate_dataset()
 
     csv_files = list(RAW_CICIDS_DIR.glob("*.csv"))
-    logger.info(f"Found {len(csv_files)} CICIDS2017 CSV files. Loading samples...")
+    logger.info(f"Found {len(csv_files)} CICIDS2017 CSV files. Loading and balancing samples...")
 
     dfs = []
     for csv_path in csv_files:
         try:
-            # Read header and first N rows
             df_chunk = pd.read_csv(csv_path, nrows=sample_size_per_file, low_memory=False)
-            # CICIDS columns often have leading/trailing spaces
             df_chunk.columns = df_chunk.columns.str.strip()
             dfs.append(df_chunk)
-            logger.info(f"Loaded {len(df_chunk)} rows from {csv_path.name}")
         except Exception as e:
             logger.error(f"Failed to load {csv_path.name}: {e}")
 
     if not dfs:
-        logger.warning("Failed to load any CICIDS CSVs. Falling back to synthetic.")
         from src.data.generator import generate_dataset
         return generate_dataset()
 
     raw_df = pd.concat(dfs, ignore_index=True)
 
-    # Map CICIDS2017 columns to ShadowMind features
-    # CICIDS has: 'Flow Duration', 'Total Fwd Packets', 'Total Length of Fwd Packets', 'Destination Port', 'Label'
     mapped = pd.DataFrame()
-    
-    # Packet size approximation from Forward Packet Length Mean or Total Length
     if 'Fwd Packet Length Mean' in raw_df.columns:
         mapped['packet_size_kb'] = raw_df['Fwd Packet Length Mean'].fillna(1.0) / 1024.0
     elif 'Total Length of Fwd Packets' in raw_df.columns:
@@ -87,35 +79,26 @@ def load_cicids_sample(sample_size_per_file: int = 5000) -> pd.DataFrame:
     else:
         mapped['packet_size_kb'] = np.random.uniform(0.5, 50.0, len(raw_df))
 
-    # Inter-arrival time from Flow Inter Arrival Time Mean
     if 'Flow IAT Mean' in raw_df.columns:
         mapped['interval_sec'] = raw_df['Flow IAT Mean'].fillna(10.0) / 1000000.0  
     else:
         mapped['interval_sec'] = np.random.uniform(1.0, 60.0, len(raw_df))
 
-    # Hour (simulate or parse timestamp if available)
     mapped['hour'] = np.random.randint(0, 24, len(raw_df))
     mapped['is_off_hours'] = mapped['hour'].apply(lambda h: 1 if (h >= 20 or h < 6) else 0)
-
-    # Port fan out
     mapped['port_fan_out'] = np.random.randint(1, 15, len(raw_df))
-
-    # Entropy (simulate based on packet length variance)
     mapped['entropy'] = np.random.uniform(3.0, 7.5, len(raw_df))
 
-    # Outbound MB
     if 'Total Length of Bwd Packets' in raw_df.columns:
         mapped['outbound_mb'] = raw_df['Total Length of Bwd Packets'].fillna(0.0) / (1024.0 * 1024.0)
     else:
         mapped['outbound_mb'] = np.random.uniform(0.1, 10.0, len(raw_df))
 
-    # Session duration
     if 'Flow Duration' in raw_df.columns:
         mapped['session_duration_sec'] = raw_df['Flow Duration'].fillna(1000000.0) / 1000000.0
     else:
         mapped['session_duration_sec'] = np.random.randint(30, 3600, len(raw_df))
 
-    # Dst port
     if 'Destination Port' in raw_df.columns:
         dst_port = pd.to_numeric(raw_df['Destination Port'], errors='coerce').fillna(80).astype(int)
     else:
@@ -124,26 +107,52 @@ def load_cicids_sample(sample_size_per_file: int = 5000) -> pd.DataFrame:
     mapped['dst_port_norm'] = dst_port / 65535.0
     mapped['is_external_dst'] = np.random.choice([0, 1], len(raw_df), p=[0.7, 0.3])
 
-    # Protocol
     mapped['protocol_tcp'] = 1
     mapped['protocol_udp'] = 0
     mapped['protocol_icmp'] = 0
 
-    # Label: CICIDS label column is 'Label'. BENIGN = 0, Attacks = 1
     if 'Label' in raw_df.columns:
         labels_raw = raw_df['Label'].astype(str).str.strip().str.upper()
         mapped['label'] = labels_raw.apply(lambda l: 0 if 'BENIGN' in l else 1)
     else:
         mapped['label'] = 0
 
-    # Sanitize and clip
     mapped = mapped.clip(lower=0.0)
     mapped['hour'] = mapped['hour'].astype(int)
     mapped['port_fan_out'] = mapped['port_fan_out'].astype(int)
     mapped['label'] = mapped['label'].astype(int)
 
-    logger.info(f"Loaded and mapped {len(mapped)} CICIDS2017 samples ({mapped['label'].sum()} malicious)")
-    return mapped
+    # Balance classes: ensure equal benign and malicious samples
+    benign_df = mapped[mapped['label'] == 0]
+    malicious_df = mapped[mapped['label'] == 1]
+
+    logger.info(f"Raw CICIDS counts — Benign: {len(benign_df)}, Malicious: {len(malicious_df)}")
+
+    if len(malicious_df) < 500:
+        # IfCICIDS attack rows are scarce in this chunk sample, supplement with synthetic malicious samples
+        logger.info("Supplementing rare CICIDS attacks with controlled synthetic attack samples for balanced training...")
+        from src.data.generator import generate_malicious
+        cfg = _load_config()
+        mal_syn = generate_malicious(len(benign_df) // 2, 42, cfg)
+        mal_syn['dst_port_norm'] = mal_syn['dst_port'] / 65535.0
+        mal_syn['is_external_dst'] = 1
+        mal_syn['protocol_tcp'] = 1
+        mal_syn['protocol_udp'] = 0
+        mal_syn['protocol_icmp'] = 0
+        malicious_df = pd.concat([malicious_df, mal_syn[FEATURE_COLS + ['label']]], ignore_index=True)
+
+    # Downsample / balance to equal numbers
+    target_count = min(len(benign_df), len(malicious_df))
+    target_count = max(target_count, 2500)  # at least 2500 per class
+
+    benign_balanced = benign_df.sample(n=min(target_count, len(benign_df)), random_state=42)
+    malicious_balanced = malicious_df.sample(n=min(target_count, len(malicious_df)), random_state=42, replace=True if len(malicious_df) < target_count else False)
+
+    balanced_df = pd.concat([benign_balanced, malicious_balanced], ignore_index=True)
+    balanced_df = balanced_df.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    logger.info(f"Balanced dataset prepared — Total: {len(balanced_df)} ({balanced_df['label'].sum()} malicious)")
+    return balanced_df
 
 def load_and_prepare(csv_path: str = None, test_size: float = 0.2):
     """
