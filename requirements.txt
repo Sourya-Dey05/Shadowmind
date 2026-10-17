@@ -1,0 +1,27 @@
+# =============================================================================
+# FILE: requirements.txt
+# PURPOSE: Exact Python package dependencies for ShadowMind Phase 0.
+#          Only packages actually used are listed — nothing extra.
+#          Packages are pinned to minimum compatible versions.
+#          Install with:  pip install -r requirements.txt
+#          Phase 1 will add: torch, torchvision, torch-geometric
+#          Phase 3 will add: cryptography
+# =============================================================================
+
+# --- UI ---
+customtkinter>=5.2.0
+
+# --- Security / Auth ---
+bcrypt>=4.0.0
+
+# --- Config ---
+pyyaml>=6.0
+
+# --- Data & ML foundation ---
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# --- Notebooks (optional, for Phase 1 Colab work) ---
+jupyter>=1.0.0
+matplotlib>=3.7.0

@@ -1,0 +1,86 @@
+# =============================================================================
+# FILE: configs/thresholds.yaml
+# PURPOSE: Central configuration for all tunable parameters in ShadowMind.
+#          Controls detection sensitivity, TTL durations, key rotation, auth
+#          limits, and debug mode. Edit this file to tune the system without
+#          touching source code.
+# =============================================================================
+
+# --- App mode ---
+app:
+  debug: false                  # NEVER set true in production / demo
+  version: "0.1.0"
+  name: "ShadowMind"
+
+# --- Authentication ---
+auth:
+  max_login_attempts: 5         # lock account after this many failed logins
+  lockout_duration_seconds: 300 # 5 minutes lockout after max failed attempts
+  session_ttl_seconds: 28800    # 8 hours — session key auto-destructs after this
+  bcrypt_rounds: 12             # bcrypt cost factor (12 = ~300ms per hash, safe)
+  min_password_length: 10
+
+# --- Detection engine thresholds ---
+detection:
+  risk_score:
+    benign_max: 0.35            # score <= this → BENIGN
+    suspicious_min: 0.36        # score in (benign_max, confirmed_min) → SUSPICIOUS
+    confirmed_min: 0.75         # score >= this → CONFIRMED EXFILTRATION
+
+  slow_exfil:
+    max_packet_kb: 5.0          # packets under this size are flagged as potential beacons
+    beacon_interval_min_sec: 60 # minimum interval to consider periodic beaconing
+    off_hours_start: 20         # 8 PM
+    off_hours_end: 6            # 6 AM
+
+  cnn:
+    outbound_spike_mb: 50.0     # single-session outbound volume that triggers spatial flag
+    unusual_port_fan_out: 10    # number of distinct destination ports in one session
+
+  lstm:
+    sequence_length: 50         # number of time steps fed into LSTM
+    anomaly_threshold: 0.6      # LSTM reconstruction error above this → flag
+
+  gnn:
+    message_passing_steps: 3    # GNN propagation depth
+    graph_anomaly_threshold: 0.5
+
+# --- Poison Pill Vault ---
+vault:
+  aes_key_bits: 256             # AES-256
+  key_rotation_on_breach: true  # auto-rotate key on CONFIRMED EXFILTRATION
+  rotation_timeout_ms: 500      # must complete re-encryption within this window
+  ttl_wipe_on_logoff: true      # zero-wipe key from RAM on session end
+  protected_extensions:         # file types the vault watches
+    - ".pdf"
+    - ".docx"
+    - ".xlsx"
+    - ".csv"
+    - ".db"
+    - ".sqlite"
+    - ".txt"
+    - ".json"
+
+# --- Honeypot ---
+honeypot:
+  enabled: true
+  decoy_count: 5                # number of fake files/shares to create
+  redirect_on_suspicious: true  # redirect SUSPICIOUS traffic (not just CONFIRMED)
+  interaction_log_max_lines: 10000
+
+# --- Data / synthetic generator ---
+data:
+  synthetic:
+    benign_samples: 5000
+    malicious_samples: 1000
+    random_seed: 42
+  output_path: "data/processed/synthetic_traffic.csv"
+  graph_output_path: "data/processed/synthetic_graph.json"
+
+# --- Logging ---
+logging:
+  level: "INFO"                 # DEBUG / INFO / WARNING / ERROR
+  log_to_file: true
+  log_path: "logs/shadowmind.log"
+  max_log_size_mb: 10
+  backup_count: 3
