@@ -139,18 +139,19 @@ class DashboardTab(ctk.CTkFrame):
         if monitored_file.exists():
             last_size = monitored_file.stat().st_size
 
-        # Shared state for remote device trigger
-        state = {"remote_attack": False}
+        # Shared state for remote device trigger and IP tracking
+        state = {"remote_attack": False, "attacker_ip": "127.0.0.1"}
 
         class AttackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 state["remote_attack"] = True
+                state["attacker_ip"] = self.client_address[0]  # Capture attacker's actual IP!
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
                 self.wfile.write(b"<h1>SHADOWMIND DEFENSE SYSTEM: ACCESS DENIED</h1>")
             def log_message(self, format, *args):
-                pass  # suppress console spam
+                pass
 
         # Start background HTTP server on port 8080
         def run_server():
@@ -167,14 +168,17 @@ class DashboardTab(ctk.CTkFrame):
             time.sleep(2.0)
             try:
                 attack_detected = False
+                source_ip = "Internal Host"
                 if state["remote_attack"]:
                     attack_detected = True
+                    source_ip = state["attacker_ip"]
                     state["remote_attack"] = False  # reset trigger
 
                 if monitored_file.exists():
                     current_size = monitored_file.stat().st_size
                     if current_size > last_size:
                         attack_detected = True
+                        source_ip = "Local File Monitor"
                         last_size = current_size
 
                 if attack_detected:
@@ -184,6 +188,8 @@ class DashboardTab(ctk.CTkFrame):
                     res = self.engine.predict(dummy_flat, dummy_seq)
                     score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
+                    # Log attacker IP explicitly
+                    self.after(0, lambda ip=source_ip: self._append_log(f"ALERT: Attack traffic intercepted from Source IP: {ip}"))
                 else:
                     # Natural fluctuating benign traffic (scores between 0.0010 and 0.0850)
                     dummy_flat = np.random.uniform(0.01, 0.2, (1, 13)).astype(np.float32)
