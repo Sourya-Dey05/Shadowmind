@@ -61,13 +61,22 @@ class DashboardTab(ctk.CTkFrame):
             font=ctk.CTkFont(family="Courier New", size=22, weight="bold"),
             text_color=C_SUCCESS
         )
-        self.score_display_label.place(relx=0.5, rely=0.4, anchor="center")
+        self.score_display_label.place(relx=0.5, rely=0.35, anchor="center")
 
         ctk.CTkLabel(
             graph_frame,
             text="Ensemble: SpatialCNN + TemporalLSTM + FusionMLP\nEvaluates network traffic flows in real time.",
             font=ctk.CTkFont(size=11), text_color=C_SUBTEXT, justify="center"
-        ).place(relx=0.5, rely=0.7, anchor="center")
+        ).place(relx=0.5, rely=0.6, anchor="center")
+
+        # Attack simulation trigger button for demo
+        ctk.CTkButton(
+            graph_frame, text="⚡ SIMULATE ATTACK SPIKE",
+            command=self._trigger_attack_spike,
+            fg_color=C_DANGER, hover_color="#cc0000",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            corner_radius=8
+        ).place(relx=0.5, rely=0.82, anchor="center")
 
         # --- Event log ---
         log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
@@ -121,12 +130,20 @@ class DashboardTab(ctk.CTkFrame):
         threading.Thread(target=self._sim_loop, daemon=True).start()
 
     def _sim_loop(self):
+        counter = 0
         while getattr(self, "_sim_running", True):
             time.sleep(4.5)
             try:
-                # Generate random traffic sample for live inference test
-                dummy_flat = np.random.randn(1, 13).astype(np.float32)
-                dummy_seq  = np.random.randn(1, 50, 13).astype(np.float32)
+                counter += 1
+                # Every 4th iteration, simulate an attack signature (high entropy, tiny packet, off-hours)
+                if counter % 4 == 0:
+                    dummy_flat = np.random.uniform(0.1, 0.5, (1, 13)).astype(np.float32)
+                    dummy_flat[0, 5] = 7.8  # high entropy
+                    dummy_flat[0, 3] = 1.0  # off-hours
+                    dummy_seq = np.random.uniform(0.1, 0.4, (1, 50, 13)).astype(np.float32)
+                else:
+                    dummy_flat = np.random.randn(1, 13).astype(np.float32)
+                    dummy_seq  = np.random.randn(1, 50, 13).astype(np.float32)
 
                 res = self.engine.predict(dummy_flat, dummy_seq)
                 score = res["risk_score"]
@@ -149,6 +166,20 @@ class DashboardTab(ctk.CTkFrame):
             self._append_log(f"Traffic evaluated — Score: {score:.4f} | Status: {label}")
         except Exception:
             pass
+
+    def _trigger_attack_spike(self):
+        """Manually trigger a simulated attack spike for demo purposes."""
+        self._append_log("ALERT: Manual attack spike triggered!")
+        try:
+            spike_flat = np.ones((5, 13), dtype=np.float32) * 5.0
+            spike_seq  = np.ones((5, 50, 13), dtype=np.float32) * 5.0
+            res = self.engine.predict(spike_flat, spike_seq)
+            score = res["risk_score"]
+            label = res["threat_label"]
+            self._update_ui_score(score, label, C_DANGER)
+            self._append_log(f"ATTACK DETECTED — Score: {score:.4f} | Status: {label}")
+        except Exception as e:
+            self._append_log(f"Attack simulation error: {e}")
 
     def destroy(self):
         self._sim_running = False
