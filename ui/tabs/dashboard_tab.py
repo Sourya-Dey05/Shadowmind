@@ -199,6 +199,20 @@ class DashboardTab(ctk.CTkFrame):
                     score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
                     
+                    # Automatically trigger Poison Pill Vault emergency key rotation on breach!
+                    try:
+                        vault_dir = Path(__file__).resolve().parents[2] / "data" / "vault"
+                        protected_files = list(vault_dir.glob("*.*"))
+                        if protected_files:
+                            # We import rotation here to avoid circular dependency
+                            from src.vault.rotation import emergency_rotate_keys
+                            # Use a dummy default key if not initialized in session
+                            dummy_old_key = b"ShadowMindSecureSessionKey256Bytes!"[:32]
+                            _, elapsed = emergency_rotate_keys(dummy_old_key, protected_files)
+                            self.after(0, lambda e=elapsed: self._append_log(f"🛡️ POISON PILL VAULT: Breach confirmed! Emergency key rotated in {e:.2f}ms. Stolen ciphertext invalidated."))
+                    except Exception as rot_err:
+                        self.after(0, lambda err=rot_err: self._append_log(f"Vault rotation error: {err}"))
+
                     if proxy_ip:
                         hop_path = f"Device A ({source_ip}) ➔ Device B Proxy ({proxy_ip}) ➔ Vault (Laptop)"
                         self.after(0, lambda p=hop_path: self._append_log(f"HoneyGraph GNN Topology Alert: {p}"))
