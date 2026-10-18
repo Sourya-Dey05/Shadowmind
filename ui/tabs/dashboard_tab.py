@@ -155,31 +155,65 @@ class DashboardTab(ctk.CTkFrame):
                     state["attacker_ip"] = client_ip
                     state["proxy_ip"] = ""
 
+                # Check if hacker clicked a specific decoy file
+                requested_path = self.path
+                clicked_file = "General Share Index"
+                if "financial" in requested_path.lower():
+                    clicked_file = "financial_passwords_2026.xlsx"
+                elif "database" in requested_path.lower():
+                    clicked_file = "customer_database_dump.sql"
+                elif "payroll" in requested_path.lower():
+                    clicked_file = "executive_payroll_salaries.pdf"
+                elif "aws" in requested_path.lower():
+                    clicked_file = "aws_production_keys.env"
+                elif "topology" in requested_path.lower():
+                    clicked_file = "internal_network_topology.txt"
+
+                # Log the specific file click
+                try:
+                    from src.honeypot.interaction_log import InteractionLogger
+                    InteractionLogger().log_interaction(state["attacker_ip"], f"DOWNLOAD_ATTEMPT: {clicked_file}", clicked_file)
+                except Exception:
+                    pass
+
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
                 
-                # Serve realistic fake corporate decoy file share page to the hacker's browser!
-                html_response = """
-                <html>
-                <head><title>Internal Corporate File Share - Restricted</title></head>
-                <body style="background-color: #121212; color: #00ffcc; font-family: monospace; padding: 20px;">
-                    <h2>📁 INTERNAL SHARED DRIVE // SECURE_VAULT_BACKUP</h2>
-                    <p style="color: #ff4444;">[!] WARNING: Unauthorized access is monitored and logged by ShadowMind Defense.</p>
-                    <hr style="border-color: #333;">
-                    <h3>Available Sensitive Shares:</h3>
-                    <ul>
-                        <li><a href="#" style="color: #00c8ff;">financial_passnumbers_2026.xlsx</a> (Size: 2.4 MB)</li>
-                        <li><a href="#" style="color: #00c8ff;">customer_database_dump.sql</a> (Size: 45.1 MB)</li>
-                        <li><a href="#" style="color: #00c8ff;">executive_payroll_salaries.pdf</a> (Size: 1.1 MB)</li>
-                        <li><a href="#" style="color: #00c8ff;">aws_production_keys.env</a> (Size: 4 KB)</li>
-                        <li><a href="#" style="color: #00c8ff;">internal_network_topology.txt</a> (Size: 12 KB)</li>
-                    </ul>
-                    <hr style="border-color: #333;">
-                    <p style="color: #888;">Session ID: SHADOWMIND_TRAP_99812 | Status: Sandbox Active</p>
-                </body>
-                </html>
-                """
+                # If they clicked a file, serve fake contents or trap download
+                if clicked_file != "General Share Index":
+                    html_response = f"""
+                    <html>
+                    <head><title>Downloading {clicked_file}...</title></head>
+                    <body style="background-color: #121212; color: #ffaa00; font-family: monospace; padding: 20px;">
+                        <h2>📥 DOWNLOADING: {clicked_file}</h2>
+                        <p style="color: #00ffcc;">[+] Stream initiated. Extracting records...</p>
+                        <p style="color: #888;">Note: This file contains honeytoken tracking identifiers. Activity is fully recorded.</p>
+                        <br><a href="/" style="color: #00c8ff;">&lt;&lt; Return to Shared Drive Index</a>
+                    </body>
+                    </html>
+                    """
+                else:
+                    html_response = """
+                    <html>
+                    <head><title>Internal Corporate File Share - Restricted</title></head>
+                    <body style="background-color: #121212; color: #00ffcc; font-family: monospace; padding: 20px;">
+                        <h2>📁 INTERNAL SHARED DRIVE // SECURE_VAULT_BACKUP</h2>
+                        <p style="color: #ff4444;">[!] WARNING: Unauthorized access is monitored and logged by ShadowMind Defense.</p>
+                        <hr style="border-color: #333;">
+                        <h3>Available Sensitive Shares:</h3>
+                        <ul>
+                            <li><a href="/financial_passwords" style="color: #00c8ff;">financial_passwords_2026.xlsx</a> (Size: 2.4 MB)</li>
+                            <li><a href="/customer_database" style="color: #00c8ff;">customer_database_dump.sql</a> (Size: 45.1 MB)</li>
+                            <li><a href="/executive_payroll" style="color: #00c8ff;">executive_payroll_salaries.pdf</a> (Size: 1.1 MB)</li>
+                            <li><a href="/aws_production_keys" style="color: #00c8ff;">aws_production_keys.env</a> (Size: 4 KB)</li>
+                            <li><a href="/internal_topology" style="color: #00c8ff;">internal_network_topology.txt</a> (Size: 12 KB)</li>
+                        </ul>
+                        <hr style="border-color: #333;">
+                        <p style="color: #888;">Session ID: SHADOWMIND_TRAP_99812 | Status: Sandbox Active</p>
+                    </body>
+                    </html>
+                    """
                 self.wfile.write(html_response.encode("utf-8"))
             def log_message(self, format, *args):
                 pass
