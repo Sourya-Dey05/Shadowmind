@@ -215,11 +215,14 @@ class DashboardTab(ctk.CTkFrame):
                     except Exception as rot_err:
                         self.after(0, lambda err=rot_err: self._append_log(f"Vault rotation error: {err}"))
 
-                    if proxy_ip:
-                        hop_path = f"Device A ({source_ip}) ➔ Device B Proxy ({proxy_ip}) ➔ Vault (Laptop)"
-                        self.after(0, lambda p=hop_path: self._append_log(f"HoneyGraph GNN Topology Alert: {p}"))
-                    else:
-                        self.after(0, lambda ip=source_ip: self._append_log(f"ALERT: Attack traffic intercepted from Source IP: {ip}"))
+                    # Automatically trigger Honeypot redirection and intel logging on attack!
+                    try:
+                        from src.honeypot.redirector import HoneypotRedirector
+                        redirector = HoneypotRedirector()
+                        redir_log = redirector.handle_redirect(source_ip, "/vault/secret_project_intel.txt")
+                        self.after(0, lambda r=redir_log: self._append_log(f"🍯 HONEYPOT: Attacker redirected to decoy trap!"))
+                    except Exception as hp_err:
+                        pass
                 else:
                     # True real-time dynamic benign score fluctuation
                     dummy_flat = np.random.uniform(0.01, 0.9, (1, 13)).astype(np.float32)

@@ -1,14 +1,14 @@
 # =============================================================================
 # FILE: ui/tabs/honeypot_tab.py
-# PURPOSE: Honeypot tab UI. In Phase 0 this is a layout skeleton showing the
-#          active decoys list and the attacker interaction live log panel.
-#          Phase 4 will wire in decoy_manager.py, interaction_log.py,
-#          ml_adapter.py, and redirector.py. All containers are pre-built here
-#          so Phase 4 only needs to inject data, not redesign the layout.
+# PURPOSE: Honeypot tab UI (Fully wired in Phase 4).
+#          Displays active deployed decoys, attacker interaction logs, and
+#          real-time telemetry from the HoneypotRedirector and InteractionLogger.
 # =============================================================================
 
 import customtkinter as ctk
 from src.auth.auth import Session
+from src.honeypot.decoy_manager import DecoyManager
+from src.honeypot.interaction_log import InteractionLogger
 
 C_BG      = "#0d0f14"
 C_PANEL   = "#13161e"
@@ -21,14 +21,17 @@ C_SUBTEXT = "#888888"
 
 class HoneypotTab(ctk.CTkFrame):
     """
-    Dynamic Honeypot UI: active decoys, attacker interaction log,
-    ML adapter status.
+    Dynamic Honeypot UI: active decoys, live attacker interaction log,
+    and redirection metrics.
     """
 
     def __init__(self, parent, session: Session):
         super().__init__(parent, fg_color=C_BG)
         self.session = session
+        self.decoy_mgr = DecoyManager()
+        self.interaction_logger = InteractionLogger()
         self._build()
+        self._refresh_data()
 
     def _build(self):
         self.grid_columnconfigure(0, weight=1)
@@ -36,8 +39,8 @@ class HoneypotTab(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
 
         # --- Status cards ---
-        self._card(0, "Active Decoys",      "0",        C_WARNING)
-        self._card(1, "Attackers Diverted", "0",        C_SUCCESS)
+        self.decoy_count_card, self.decoy_val_lbl = self._card(0, "Active Decoys", "0", C_WARNING)
+        self.diverted_card, self.diverted_val_lbl = self._card(1, "Attackers Diverted", "0", C_SUCCESS)
 
         # --- Left: decoy list ---
         decoy_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
@@ -46,7 +49,7 @@ class HoneypotTab(ctk.CTkFrame):
         decoy_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            decoy_frame, text="Active Decoys",
+            decoy_frame, text="Active Deception Traps",
             font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
@@ -55,12 +58,12 @@ class HoneypotTab(ctk.CTkFrame):
             font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
         )
         self.decoy_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
-        self._append_decoy("No decoys active. (Phase 4)")
 
         ctk.CTkButton(
-            decoy_frame, text="Deploy Decoys",
+            decoy_frame, text="Deploy / Refresh Decoys",
+            command=self._deploy_decoys,
             fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            state="disabled", corner_radius=8
+            corner_radius=8
         ).grid(row=2, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # --- Right: interaction log ---
@@ -70,7 +73,7 @@ class HoneypotTab(ctk.CTkFrame):
         log_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            log_frame, text="Attacker Interaction Log",
+            log_frame, text="Attacker Interaction Log (Honeypot Intel)",
             font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
@@ -79,15 +82,14 @@ class HoneypotTab(ctk.CTkFrame):
             font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
         )
         self.interaction_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
-        self._append_interaction("Waiting for attacker activity... (Phase 4)")
 
         # ML adapter status
         ml_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
         ml_frame.grid(row=2, column=0, columnspan=2, padx=12, pady=(0, 12), sticky="ew")
         ctk.CTkLabel(
             ml_frame,
-            text="ML Adapter:  Adjusts decoy realism based on observed attacker behavior  |  Status: NOT LOADED (Phase 4)",
-            font=ctk.CTkFont(size=11), text_color=C_SUBTEXT
+            text="ML Adapter: Adapts decoy realism based on attacker behavior  |  Status: ACTIVE (Phase 4)",
+            font=ctk.CTkFont(size=11), text_color=C_SUCCESS
         ).pack(padx=16, pady=10)
 
     def _card(self, col: int, title: str, value: str, color: str):
@@ -98,15 +100,30 @@ class HoneypotTab(ctk.CTkFrame):
         card.grid_propagate(False)
         ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11),
                      text_color=C_SUBTEXT).place(x=16, y=10)
-        ctk.CTkLabel(card, text=value, font=ctk.CTkFont(size=22, weight="bold"),
-                     text_color=color).place(x=16, y=32)
+        val_lbl = ctk.CTkLabel(card, text=value, font=ctk.CTkFont(size=22, weight="bold"),
+                               text_color=color)
+        val_lbl.place(x=16, y=32)
+        return card, val_lbl
 
-    def _append_decoy(self, msg: str):
+    def _deploy_decoys(self):
+        self.decoy_mgr.deploy_decoys()
+        self._refresh_data()
+
+    def _refresh_data(self):
+        # Decoys
+        decoys = self.decoy_mgr.get_active_decoys()
         self.decoy_box.configure(state="normal")
-        self.decoy_box.insert("end", msg + "\n")
+        self.decoy_box.delete("1.0", "end")
+        for d in decoys:
+            self.decoy_box.insert("end", f"🍯 [TRAP] {d.name}\n    Path: {d}\n\n")
         self.decoy_box.configure(state="disabled")
+        self.decoy_val_lbl.configure(text=str(len(decoys)))
 
-    def _append_interaction(self, msg: str):
+        # Interactions
+        logs = self.interaction_logger.get_recent_interactions(50)
         self.interaction_box.configure(state="normal")
-        self.interaction_box.insert("end", msg + "\n")
+        self.interaction_box.delete("1.0", "end")
+        for l in logs:
+            self.interaction_box.insert("end", f"{l}\n")
         self.interaction_box.configure(state="disabled")
+        self.diverted_val_lbl.configure(text=str(len(logs)))
