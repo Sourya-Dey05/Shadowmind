@@ -17,6 +17,7 @@ from src.vault.keygen import generate_session_key
 from src.vault.aes_vault import AESVault
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.ttl_destruct import zero_wipe_ram_key
+from src.vault.session_state import SessionState
 
 C_BG      = "#0d0f14"
 C_PANEL   = "#13161e"
@@ -38,9 +39,9 @@ class VaultTab(ctk.CTkFrame):
         super().__init__(parent, fg_color=C_BG)
         self.session = session
         
-        # Initialize active session key in RAM
-        self.session_key = generate_session_key(256)
-        self.vault = AESVault(self.session_key)
+        # Initialize active session key in global RAM state
+        SessionState.reset()
+        self.vault = AESVault(SessionState.get_key())
         self.protected_files = []
 
         self._build()
@@ -213,7 +214,7 @@ class VaultTab(ctk.CTkFrame):
                 messagebox.showerror("Unlock Error", f"Failed to decrypt file (invalid session key or corrupted):\n{e}")
 
     def _show_active_key(self):
-        key_hex = self.session_key.hex()
+        key_hex = SessionState.get_key().hex()
         messagebox.showinfo(
             "Active RAM Session Key",
             f"Active AES-256 Key (in RAM only):\n\n{key_hex}\n\nNote: This key is never stored on disk and will be zero-wiped upon session logout."
@@ -222,9 +223,9 @@ class VaultTab(ctk.CTkFrame):
     def _trigger_emergency_rotation(self):
         self.rotate_btn.configure(state="disabled", text="Rotating...")
         try:
-            new_key, elapsed = emergency_rotate_keys(self.session_key, self.protected_files)
-            self.session_key = new_key
-            self.vault = AESVault(self.session_key)
+            new_key, elapsed = emergency_rotate_keys(SessionState.get_key(), self.protected_files)
+            SessionState.set_key(new_key)
+            self.vault = AESVault(SessionState.get_key())
             self.key_status_lbl.configure(text="ROTATED & SECURED", text_color=C_SUCCESS)
             messagebox.showinfo(
                 "Emergency Rotation Complete",

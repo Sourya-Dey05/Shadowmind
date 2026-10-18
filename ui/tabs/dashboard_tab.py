@@ -205,10 +205,12 @@ class DashboardTab(ctk.CTkFrame):
                         protected_files = list(vault_dir.glob("*.*"))
                         if protected_files:
                             from src.vault.rotation import emergency_rotate_keys
-                            # Access parent app or vault tab session key if available, else generate
-                            old_key = getattr(self, "current_session_key", b"ShadowMindSecureSessionKey256Bytes!"[:32])
+                            from src.vault.session_state import SessionState
+                            
+                            old_key = SessionState.get_key()
                             new_key, elapsed = emergency_rotate_keys(old_key, protected_files)
-                            self.current_session_key = new_key
+                            SessionState.set_key(new_key)
+                            
                             self.after(0, lambda e=elapsed: self._append_log(f"🛡️ POISON PILL VAULT: Attack detected! Key auto-rotated in {e:.2f}ms. Ciphertext invalidated."))
                     except Exception as rot_err:
                         self.after(0, lambda err=rot_err: self._append_log(f"Vault rotation error: {err}"))
