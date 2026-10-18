@@ -73,7 +73,14 @@ class VaultTab(ctk.CTkFrame):
             command=self._add_file_to_vault,
             fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
             corner_radius=8
-        ).grid(row=2, column=0, padx=12, pady=(0, 12), sticky="ew")
+        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+
+        ctk.CTkButton(
+            files_frame, text="🔓 Decrypt / Unlock File",
+            command=self._decrypt_file_from_vault,
+            fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
+            corner_radius=8
+        ).grid(row=3, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # --- Right: key status + TTL + emergency rotation ---
         right = ctk.CTkFrame(self, fg_color=C_BG)
@@ -179,6 +186,16 @@ class VaultTab(ctk.CTkFrame):
                 messagebox.showinfo("Vault Success", f"File encrypted & protected:\n{path.name}")
             except Exception as e:
                 messagebox.showerror("Vault Error", f"Failed to encrypt file:\n{e}")
+
+    def _decrypt_file_from_vault(self):
+        filename = filedialog.askopenfilename(title="Select Encrypted Vault File to Unlock")
+        if filename:
+            path = Path(filename)
+            try:
+                self.vault.decrypt_file(path)
+                messagebox.showinfo("Vault Unlocked", f"File successfully decrypted & unlocked:\n{path.name}")
+            except Exception as e:
+                messagebox.showerror("Unlock Error", f"Failed to decrypt file (invalid session key or corrupted):\n{e}")
 
     def _trigger_emergency_rotation(self):
         self.rotate_btn.configure(state="disabled", text="Rotating...")
