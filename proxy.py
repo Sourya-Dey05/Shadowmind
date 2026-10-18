@@ -13,13 +13,13 @@ import urllib.request
 import sys
 
 # --- CONFIGURE THESE BEFORE RUNNING ON PHONE 2 ---
-LAPTOP_IP = "192.168.1.50"  # Replace with your laptop's Wi-Fi IPv4 address
+LAPTOP_IP = "10.205.183.49"  # Replace with your laptop's Wi-Fi IPv4 address
 PORT = 8080                 # ShadowMind listener port
 LISTEN_PORT = 9000          # Port Phone 2 listens on for attacker traffic
 
 class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        target_url = f"http://{LAPTOP_IP}:{PORT}{self.path}"
+        target_url = f"http://10.205.183.49:8080"
         attacker_ip = self.client_address[0]
         
         print(f"[HOP 2 PROXY] Intercepted attack request from Attacker IP: {attacker_ip}")
