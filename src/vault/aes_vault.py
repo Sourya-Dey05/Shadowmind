@@ -9,6 +9,7 @@
 import os
 import logging
 from pathlib import Path
+from typing import Union
 from cryptography.fernet import Fernet
 import base64
 
