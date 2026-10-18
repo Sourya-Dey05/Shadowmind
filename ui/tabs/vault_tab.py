@@ -80,7 +80,15 @@ class VaultTab(ctk.CTkFrame):
             command=self._decrypt_file_from_vault,
             fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
             corner_radius=8
-        ).grid(row=3, column=0, padx=12, pady=(0, 12), sticky="ew")
+        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
+
+        # Warning banner
+        warning_lbl = ctk.CTkLabel(
+            files_frame,
+            text="⚠️ Warning: Vault files use RAM-only keys.\nDecrypt files before logout or shutdown!",
+            font=ctk.CTkFont(size=10), text_color=C_WARNING, justify="center"
+        )
+        warning_lbl.grid(row=4, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # --- Right: key status + TTL + emergency rotation ---
         right = ctk.CTkFrame(self, fg_color=C_BG)
