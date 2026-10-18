@@ -119,6 +119,15 @@ def _ensure_dataset():
     else:
         logger.info(f"Dataset found at {out_path}")
 
+def _ensure_decoys():
+    try:
+        from src.honeypot.decoy_manager import DecoyManager
+        mgr = DecoyManager()
+        mgr.deploy_decoys()
+        logger.info("Dynamic honeypot decoys auto-deployed successfully.")
+    except Exception as e:
+        logger.warning(f"Failed to auto-deploy decoys: {e}")
+
 # ---------------------------------------------------------------------------
 # Launch
 # ---------------------------------------------------------------------------
@@ -129,6 +138,7 @@ def main():
     logger.info("=" * 60)
 
     _ensure_dataset()
+    _ensure_decoys()
 
     # Import UI only after dependency check passes
     from ui.main_window import ShadowMindApp
