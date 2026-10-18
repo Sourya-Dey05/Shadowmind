@@ -116,7 +116,14 @@ class VaultTab(ctk.CTkFrame):
             row=5, column=0, sticky="w", padx=16)
         ctk.CTkLabel(key_card, text="Secure Random (RAM only)",
                      font=ctk.CTkFont(size=12), text_color=C_TEXT).grid(
-            row=6, column=0, sticky="w", padx=16, pady=(0, 12))
+            row=6, column=0, sticky="w", padx=16, pady=(0, 8))
+
+        ctk.CTkButton(
+            key_card, text="🔍 View Active Key (RAM)",
+            command=self._show_active_key,
+            fg_color="#1f2430", hover_color="#2b3140", text_color=C_ACCENT,
+            font=ctk.CTkFont(size=11), corner_radius=6, height=28
+        ).grid(row=7, column=0, padx=16, pady=(0, 12), sticky="ew")
 
         # TTL countdown card
         ttl_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
@@ -196,6 +203,13 @@ class VaultTab(ctk.CTkFrame):
                 messagebox.showinfo("Vault Unlocked", f"File successfully decrypted & unlocked:\n{path.name}")
             except Exception as e:
                 messagebox.showerror("Unlock Error", f"Failed to decrypt file (invalid session key or corrupted):\n{e}")
+
+    def _show_active_key(self):
+        key_hex = self.session_key.hex()
+        messagebox.showinfo(
+            "Active RAM Session Key",
+            f"Active AES-256 Key (in RAM only):\n\n{key_hex}\n\nNote: This key is never stored on disk and will be zero-wiped upon session logout."
+        )
 
     def _trigger_emergency_rotation(self):
         self.rotate_btn.configure(state="disabled", text="Rotating...")
