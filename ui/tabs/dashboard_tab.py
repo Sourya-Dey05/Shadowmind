@@ -147,7 +147,6 @@ class DashboardTab(ctk.CTkFrame):
                 state["remote_attack"] = True
                 client_ip = self.client_address[0]
                 
-                # Check if forwarded via proxy (Device B / Phone 2)
                 forwarded_for = self.headers.get("X-Forwarded-For")
                 if forwarded_for:
                     state["attacker_ip"] = forwarded_for.split(",")[0].strip()
@@ -159,7 +158,29 @@ class DashboardTab(ctk.CTkFrame):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
-                self.wfile.write(b"<h1>SHADOWMIND DEFENSE SYSTEM: ACCESS DENIED</h1>")
+                
+                # Serve realistic fake corporate decoy file share page to the hacker's browser!
+                html_response = """
+                <html>
+                <head><title>Internal Corporate File Share - Restricted</title></head>
+                <body style="background-color: #121212; color: #00ffcc; font-family: monospace; padding: 20px;">
+                    <h2>📁 INTERNAL SHARED DRIVE // SECURE_VAULT_BACKUP</h2>
+                    <p style="color: #ff4444;">[!] WARNING: Unauthorized access is monitored and logged by ShadowMind Defense.</p>
+                    <hr style="border-color: #333;">
+                    <h3>Available Sensitive Shares:</h3>
+                    <ul>
+                        <li><a href="#" style="color: #00c8ff;">financial_passnumbers_2026.xlsx</a> (Size: 2.4 MB)</li>
+                        <li><a href="#" style="color: #00c8ff;">customer_database_dump.sql</a> (Size: 45.1 MB)</li>
+                        <li><a href="#" style="color: #00c8ff;">executive_payroll_salaries.pdf</a> (Size: 1.1 MB)</li>
+                        <li><a href="#" style="color: #00c8ff;">aws_production_keys.env</a> (Size: 4 KB)</li>
+                        <li><a href="#" style="color: #00c8ff;">internal_network_topology.txt</a> (Size: 12 KB)</li>
+                    </ul>
+                    <hr style="border-color: #333;">
+                    <p style="color: #888;">Session ID: SHADOWMIND_TRAP_99812 | Status: Sandbox Active</p>
+                </body>
+                </html>
+                """
+                self.wfile.write(html_response.encode("utf-8"))
             def log_message(self, format, *args):
                 pass
 
