@@ -1,481 +1,310 @@
 # =============================================================================
 # FILE: ui/tabs/vault_tab.py
-# PURPOSE: Recreated strictly from Figma Mockup (Section 1.pdf - Screen 3).
-#          - Header: LOCAL SECURITY / ENCRYPTED STORAGE & Subtitle
-#          - Panel 1 (Left): Active Workspace (/Vault Folder) list with count badge,
-#            search field, file entries ([PLAIN], [ENC]), and plaintext warning
-#          - Panel 2 (Center): Secure Vault (AES-256) Inspect & Decrypt, object hex,
-#            metadata, Cipher suite, Unlock / Decrypt button, Export Copy
-#          - Panel 3 (Right): Key Status & Emergency Rotation, RAM session key
-#            fingerprint, TTL Self-destruct armed bar, Rotate Key Now danger button
+# PURPOSE: File Vault & Active Workspace Tab UI (Fully wired in Phases 3 & 5).
+#          - File Vault: Static encrypted storage with AES-256 session keys.
+#          - Active Workspace Vault: Plaintext working directory for normal daily use
+#            (create, edit, delete freely) that auto-locks into AES ciphertext instantly
+#            upon attack detection.
 # =============================================================================
 
-import time
 import customtkinter as ctk
+from tkinter import filedialog, messagebox, simpledialog
 from pathlib import Path
-from tkinter import simpledialog, messagebox
+import time
+import threading
 
 from src.auth.auth import Session
-from src.vault.session_state import SessionState
+from src.vault.keygen import generate_session_key
+from src.vault.aes_vault import AESVault
 from src.vault.rotation import emergency_rotate_keys
+from src.vault.ttl_destruct import zero_wipe_ram_key
+from src.vault.session_state import SessionState
 from src.workspace.workspace_vault import ExternalVaultFolder
+
 from ui.theme import (
-    COLOR_BG, COLOR_SURFACE, COLOR_CARD, COLOR_CARD_HOVER,
-    COLOR_BORDER, COLOR_CYAN, COLOR_SUCCESS, COLOR_WARNING,
-    COLOR_DANGER, COLOR_PURPLE, COLOR_TEXT_PRIMARY,
-    COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED, FONT_BRAND, FONT_BODY, FONT_MONO
+    COLOR_BG as C_BG,
+    COLOR_CARD as C_PANEL,
+    COLOR_CYAN as C_ACCENT,
+    COLOR_SUCCESS as C_SUCCESS,
+    COLOR_WARNING as C_WARNING,
+    COLOR_DANGER as C_DANGER,
+    COLOR_TEXT_PRIMARY as C_TEXT,
+    COLOR_TEXT_SECONDARY as C_SUBTEXT,
+    COLOR_BORDER as C_BORDER,
+    COLOR_SURFACE as C_SURFACE,
+    FONT_BRAND, FONT_MONO, FONT_BODY
 )
 
 
 class VaultTab(ctk.CTkFrame):
     """
-    Exact recreation of Screen 3 (File Vault & Workspace):
-    - 3-Column Inspection Layout
-    - Real-time file status ([PLAIN], [ENC])
-    - Interactive Decrypt & Emergency Key Rotation
+    Poison Pill Vault & Active Workspace UI.
     """
 
     def __init__(self, parent, session: Session):
-        super().__init__(parent, fg_color=COLOR_BG)
+        super().__init__(parent, fg_color=C_BG)
         self.session = session
+        
+        self.vault = AESVault(SessionState.get_key())
         self.workspace = ExternalVaultFolder()
-        self.selected_file: Path = None
+        self.protected_files = []
 
         self._build()
-        self._refresh_workspace()
+        self._load_default_vault_files()
+        self._refresh_workspace_display()
 
     def _build(self):
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure((0, 1, 2), weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        # -------------------------------------------------------------
-        # 1. Section Header (LOCAL SECURITY / ENCRYPTED STORAGE)
-        # -------------------------------------------------------------
-        head_frame = ctk.CTkFrame(self, fg_color="transparent")
-        head_frame.grid(row=0, column=0, sticky="ew", padx=24, pady=(20, 12))
-        head_frame.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            head_frame,
-            text="LOCAL SECURITY / ENCRYPTED STORAGE",
-            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(anchor="w")
+        # =====================================================================
+        # COLUMN 0: Active Workspace Vault (Plaintext, Auto-Locking)
+        # =====================================================================
+        ws_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        ws_frame.grid(row=0, column=0, padx=(12, 6), pady=12, sticky="nsew")
+        ws_frame.grid_rowconfigure(1, weight=1)
+        ws_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            head_frame,
-            text="File vault & workspace",
-            font=ctk.CTkFont(family=FONT_BRAND, size=24, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY
-        ).pack(anchor="w", pady=(2, 0))
+            ws_frame, text="Active Workspace (/Vault Folder)",
+            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
-        ctk.CTkLabel(
-            head_frame,
-            text="Keep sensitive files sealed. Inspect, decrypt, and rotate keys without leaving your machine.",
-            font=ctk.CTkFont(family=FONT_BODY, size=12),
-            text_color=COLOR_TEXT_SECONDARY
-        ).pack(anchor="w", pady=(2, 0))
-
-        # -------------------------------------------------------------
-        # 2. Three-Column Main Container
-        # -------------------------------------------------------------
-        cols_container = ctk.CTkFrame(self, fg_color="transparent")
-        cols_container.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 20))
-        cols_container.grid_rowconfigure(0, weight=1)
-        cols_container.grid_columnconfigure(0, weight=8)   # Column 1: Workspace
-        cols_container.grid_columnconfigure(1, weight=10)  # Column 2: Inspect
-        cols_container.grid_columnconfigure(2, weight=8)   # Column 3: Key & Rotate
-
-        # =============================================================
-        # COLUMN 1: Active Workspace (/Vault Folder)
-        # =============================================================
-        p1 = ctk.CTkFrame(cols_container, fg_color=COLOR_CARD, border_width=1, border_color=COLOR_BORDER, corner_radius=12)
-        p1.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        p1.grid_rowconfigure(2, weight=1)
-        p1.grid_columnconfigure(0, weight=1)
-
-        # P1 Header
-        p1_head = ctk.CTkFrame(p1, fg_color="transparent")
-        p1_head.grid(row=0, column=0, sticky="ew", padx=16, pady=(16, 8))
-        p1_head.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            p1_head,
-            text="Active Workspace\n(/Vault Folder)",
-            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY,
-            justify="left"
-        ).grid(row=0, column=0, sticky="w")
-
-        self.p1_count_badge = ctk.CTkLabel(
-            p1_head,
-            text="06",
-            font=ctk.CTkFont(family=FONT_BRAND, size=14, weight="bold"),
-            fg_color=COLOR_SURFACE,
-            text_color=COLOR_CYAN,
-            corner_radius=4,
-            width=32,
-            height=26
+        self.ws_box = ctk.CTkTextbox(
+            ws_frame, fg_color="#0a0c10", text_color=C_TEXT,
+            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
         )
-        self.p1_count_badge.grid(row=0, column=1, sticky="e")
+        self.ws_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
 
-        # P1 Search Filter
-        search_box = ctk.CTkFrame(p1, fg_color=COLOR_SURFACE, height=32, corner_radius=6, border_width=1, border_color=COLOR_BORDER)
-        search_box.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 8))
-        search_box.pack_propagate(False)
-
-        ctk.CTkLabel(
-            search_box,
-            text="Find a local file... ⌘ K",
-            font=ctk.CTkFont(family=FONT_MONO, size=10),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(side="left", padx=10)
-
-        # File Items List (Scrollable)
-        self.files_scroll = ctk.CTkScrollableFrame(p1, fg_color="transparent")
-        self.files_scroll.grid(row=2, column=0, sticky="nsew", padx=8, pady=(0, 8))
-        self.files_scroll.grid_columnconfigure(0, weight=1)
-
-        # P1 Footer Note
-        p1_foot = ctk.CTkFrame(p1, fg_color=COLOR_SURFACE, height=44, corner_radius=8, border_width=1, border_color=COLOR_BORDER)
-        p1_foot.grid(row=3, column=0, sticky="ew", padx=16, pady=(0, 16))
-        p1_foot.pack_propagate(False)
-
-        self.p1_summary_lbl = ctk.CTkLabel(
-            p1_foot,
-            text="4 encrypted  /  2 plaintext",
-            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY
-        )
-        self.p1_summary_lbl.pack(anchor="w", padx=10, pady=(4, 0))
-
-        ctk.CTkLabel(
-            p1_foot,
-            text="Plaintext files are not protected by vault encryption.",
-            font=ctk.CTkFont(family=FONT_BODY, size=9),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(anchor="w", padx=10)
-
-        # =============================================================
-        # COLUMN 2: Secure Vault (AES-256) Inspect & Decrypt
-        # =============================================================
-        p2 = ctk.CTkFrame(cols_container, fg_color=COLOR_CARD, border_width=1, border_color=COLOR_BORDER, corner_radius=12)
-        p2.grid(row=0, column=1, sticky="nsew", padx=8)
-        p2.grid_columnconfigure(0, weight=1)
-
-        # P2 Header
-        p2_head = ctk.CTkFrame(p2, fg_color="transparent")
-        p2_head.pack(fill="x", padx=16, pady=(16, 8))
-        p2_head.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            p2_head,
-            text="Secure Vault (AES-256)",
-            font=ctk.CTkFont(family=FONT_MONO, size=13, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY
-        ).pack(anchor="w")
-
-        ctk.CTkLabel(
-            p2_head,
-            text="Inspect and decrypt the selected file.",
-            font=ctk.CTkFont(family=FONT_BODY, size=11),
-            text_color=COLOR_TEXT_SECONDARY
-        ).pack(anchor="w")
-
-        # Object Tag Card
-        obj_card = ctk.CTkFrame(p2, fg_color=COLOR_SURFACE, corner_radius=8, border_width=1, border_color=COLOR_BORDER)
-        obj_card.pack(fill="x", padx=16, pady=(4, 12))
-
-        ctk.CTkLabel(
-            obj_card,
-            text="0x7F2A · ENCRYPTED OBJECT   SEALED & VERIFIED",
-            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
-            text_color=COLOR_SUCCESS
-        ).pack(anchor="w", padx=12, pady=(10, 4))
-
-        self.inspect_name_lbl = ctk.CTkLabel(
-            obj_card,
-            text="incident_report.pdf.enc",
-            font=ctk.CTkFont(family=FONT_MONO, size=13, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY
-        )
-        self.inspect_name_lbl.pack(anchor="w", padx=12)
-
-        self.inspect_meta_lbl = ctk.CTkLabel(
-            obj_card,
-            text="PDF document · 2.4 MB · Encrypted at 14:29:12 UTC",
-            font=ctk.CTkFont(family=FONT_MONO, size=10),
-            text_color=COLOR_TEXT_MUTED
-        )
-        self.inspect_meta_lbl.pack(anchor="w", padx=12, pady=(2, 10))
-
-        # Metadata Specs Table
-        specs = ctk.CTkFrame(p2, fg_color="transparent")
-        specs.pack(fill="x", padx=16, pady=(0, 14))
-
-        for row_idx, (k, v) in enumerate([
-            ("Cipher suite", "AES-256-GCM"),
-            ("Authentication tag", "128-bit / VERIFIED"),
-            ("Key reference", "SM-K7F2 / SESSION"),
-            ("SHA-256", "a84e71c2…8fd019b6")
-        ]):
-            f = ctk.CTkFrame(specs, fg_color=COLOR_SURFACE, height=28, corner_radius=4)
-            f.pack(fill="x", pady=2)
-            f.pack_propagate(False)
-            ctk.CTkLabel(f, text=k, font=ctk.CTkFont(family=FONT_MONO, size=10), text_color=COLOR_TEXT_MUTED).pack(side="left", padx=10)
-            ctk.CTkLabel(f, text=v, font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"), text_color=COLOR_TEXT_PRIMARY).pack(side="right", padx=10)
-
-        # Decrypt Action Button
-        self.decrypt_btn = ctk.CTkButton(
-            p2,
-            text="Unlock / Decrypt Vault File",
-            command=self._decrypt_action,
-            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
-            fg_color=COLOR_CYAN,
-            hover_color="#38d4ff",
-            text_color="#07080e",
-            height=38,
-            corner_radius=6
-        )
-        self.decrypt_btn.pack(fill="x", padx=16, pady=(4, 6))
-
-        # Export Copy Secondary Action
         ctk.CTkButton(
-            p2,
-            text="EXPORT ENCRYPTED COPY",
-            command=lambda: messagebox.showinfo("Export", "Encrypted object exported to working folder."),
-            font=ctk.CTkFont(family=FONT_MONO, size=11),
-            fg_color=COLOR_SURFACE,
-            hover_color=COLOR_CARD_HOVER,
-            text_color=COLOR_TEXT_SECONDARY,
-            border_width=1,
-            border_color=COLOR_BORDER,
-            height=32,
-            corner_radius=6
-        ).pack(fill="x", padx=16, pady=(0, 10))
+            ws_frame, text="🔓 Unlock / Decrypt Vault File",
+            command=self._workspace_decrypt_file,
+            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
+            corner_radius=8
+        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
 
         ctk.CTkLabel(
-            p2,
-            text="Decrypts locally into /Vault Folder. The encrypted original is retained.\nAn active session key is required.",
-            font=ctk.CTkFont(family=FONT_BODY, size=10),
-            text_color=COLOR_TEXT_MUTED,
-            justify="center"
-        ).pack(padx=16, pady=(0, 16))
+            ws_frame,
+            text="💡 Create/edit files in Windows /Vault folder.\nAuto-encrypts on attack.\nDecrypt them here when needed.",
+            font=ctk.CTkFont(size=10), text_color=C_SUBTEXT, justify="center"
+        ).grid(row=3, column=0, padx=12, pady=(0, 12), sticky="ew")
 
-        # =============================================================
-        # COLUMN 3: Key Status & Emergency Rotation
-        # =============================================================
-        p3 = ctk.CTkFrame(cols_container, fg_color=COLOR_CARD, border_width=1, border_color=COLOR_BORDER, corner_radius=12)
-        p3.grid(row=0, column=2, sticky="nsew", padx=(8, 0))
-        p3.grid_columnconfigure(0, weight=1)
-
-        # P3 Header
-        p3_head = ctk.CTkFrame(p3, fg_color="transparent")
-        p3_head.pack(fill="x", padx=16, pady=(16, 8))
+        # =====================================================================
+        # COLUMN 1: Static Poison Pill Vault (Encrypted Storage)
+        # =====================================================================
+        files_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        files_frame.grid(row=0, column=1, padx=6, pady=12, sticky="nsew")
+        files_frame.grid_rowconfigure(1, weight=1)
+        files_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            p3_head,
-            text="Key Status &\nEmergency Rotation",
-            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY,
-            justify="left"
-        ).pack(anchor="w")
+            files_frame, text="Secure Vault (AES-256)",
+            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
-        # Key Fingerprint Card
-        fp_card = ctk.CTkFrame(p3, fg_color=COLOR_SURFACE, corner_radius=8, border_width=1, border_color=COLOR_BORDER)
-        fp_card.pack(fill="x", padx=16, pady=(4, 10))
-
-        ctk.CTkLabel(
-            fp_card,
-            text="RAM SESSION KEY   ACTIVE",
-            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
-            text_color=COLOR_SUCCESS
-        ).pack(anchor="w", padx=12, pady=(10, 2))
-
-        ctk.CTkLabel(
-            fp_card,
-            text="FINGERPRINT / MASKED",
-            font=ctk.CTkFont(family=FONT_MONO, size=9),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(anchor="w", padx=12)
-
-        self.key_fingerprint_lbl = ctk.CTkLabel(
-            fp_card,
-            text="7F2A : 9C84 : •••• : D601",
-            font=ctk.CTkFont(family=FONT_MONO, size=13, weight="bold"),
-            text_color=COLOR_CYAN
+        self.files_box = ctk.CTkTextbox(
+            files_frame, fg_color="#0a0c10", text_color=C_TEXT,
+            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
         )
-        self.key_fingerprint_lbl.pack(anchor="w", padx=12, pady=(4, 8))
+        self.files_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
 
-        # Key Details
-        kd = ctk.CTkFrame(p3, fg_color="transparent")
-        kd.pack(fill="x", padx=16, pady=(0, 10))
+        ctk.CTkButton(
+            files_frame, text="+ Add File to Vault",
+            command=self._add_file_to_vault,
+            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
+            corner_radius=8
+        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
 
-        for k, v in [
-            ("Key ID", "SM-K7F2"),
-            ("Residency", "RAM / LOCKED"),
-            ("Issued", "14:20:00 UTC"),
-            ("Expires", "14:50:00 UTC")
-        ]:
-            f = ctk.CTkFrame(kd, fg_color=COLOR_SURFACE, height=26, corner_radius=4)
-            f.pack(fill="x", pady=2)
-            f.pack_propagate(False)
-            ctk.CTkLabel(f, text=k, font=ctk.CTkFont(family=FONT_MONO, size=9), text_color=COLOR_TEXT_MUTED).pack(side="left", padx=8)
-            ctk.CTkLabel(f, text=v, font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"), text_color=COLOR_TEXT_PRIMARY).pack(side="right", padx=8)
+        ctk.CTkButton(
+            files_frame, text="🔓 Decrypt / Unlock File",
+            command=self._decrypt_file_from_vault,
+            fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
+            corner_radius=8
+        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
 
-        ctk.CTkLabel(
-            p3,
-            text="NEVER WRITTEN TO DISK",
-            font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(pady=(2, 8))
+        warning_lbl = ctk.CTkLabel(
+            files_frame,
+            text="⚠️ RAM-only keys.\nDecrypt before logout!",
+            font=ctk.CTkFont(size=10), text_color=C_WARNING, justify="center"
+        )
+        warning_lbl.grid(row=4, column=0, padx=12, pady=(0, 12), sticky="ew")
 
-        # Emergency Rotate Key Now Button
+        # =====================================================================
+        # COLUMN 2: Key Status, TTL, & Emergency Rotation
+        # =====================================================================
+        right = ctk.CTkFrame(self, fg_color=C_BG)
+        right.grid(row=0, column=2, padx=(6, 12), pady=12, sticky="nsew")
+        right.grid_columnconfigure(0, weight=1)
+
+        # Key status card
+        key_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        key_card.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        key_card.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(key_card, text="Session Key Status",
+                     font=ctk.CTkFont(size=14, weight="bold"),
+                     text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        ctk.CTkLabel(key_card, text="Status:",
+                     font=ctk.CTkFont(size=11), text_color=C_SUBTEXT).grid(
+            row=1, column=0, sticky="w", padx=16)
+        
+        self.key_status_lbl = ctk.CTkLabel(key_card, text="ACTIVE (RAM Secured)",
+                                           font=ctk.CTkFont(size=13, weight="bold"),
+                                           text_color=C_SUCCESS)
+        self.key_status_lbl.grid(row=2, column=0, sticky="w", padx=16, pady=(0, 4))
+
+        ctk.CTkButton(
+            key_card, text="🔍 View Active Key (RAM)",
+            command=self._show_active_key,
+            fg_color="#1f2430", hover_color="#2b3140", text_color=C_ACCENT,
+            font=ctk.CTkFont(size=11), corner_radius=6, height=28
+        ).grid(row=3, column=0, padx=16, pady=(0, 12), sticky="ew")
+
+        # TTL countdown card
+        ttl_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        ttl_card.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        ttl_card.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(ttl_card, text="TTL Self-Destruct Engine",
+                     font=ctk.CTkFont(size=14, weight="bold"),
+                     text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        self.ttl_status_lbl = ctk.CTkLabel(ttl_card, text="Status: Armed & Active",
+                                           font=ctk.CTkFont(size=12, weight="bold"),
+                                           text_color=C_ACCENT)
+        self.ttl_status_lbl.grid(row=1, column=0, sticky="w", padx=16, pady=(0, 12))
+
+        # Emergency rotation card
+        rot_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        rot_card.grid(row=2, column=0, sticky="ew")
+        rot_card.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(rot_card, text="Emergency Key Rotation",
+                     font=ctk.CTkFont(size=14, weight="bold"),
+                     text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        
         self.rotate_btn = ctk.CTkButton(
-            p3,
-            text="ROTATE KEY NOW",
-            command=self._rotate_keys,
-            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
-            fg_color=COLOR_DANGER,
-            hover_color="#e62e2e",
-            text_color="#ffffff",
-            height=38,
-            corner_radius=6
+            rot_card, text="ROTATE KEY NOW",
+            command=self._trigger_emergency_rotation,
+            fg_color=C_DANGER, hover_color="#cc0000",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            corner_radius=8
         )
-        self.rotate_btn.pack(fill="x", padx=16, pady=(4, 6))
+        self.rotate_btn.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="ew")
 
-        ctk.CTkLabel(
-            p3,
-            text="Immediately revokes this key and re-seals vault files with a new in-memory session key.",
-            font=ctk.CTkFont(family=FONT_BODY, size=10),
-            text_color=COLOR_TEXT_MUTED,
-            justify="center"
-        ).pack(padx=16, pady=(0, 12))
+    # --- Workspace Handlers ---
+    def _workspace_decrypt_file(self):
+        filename = simpledialog.askstring("Decrypt Vault File", "Enter exact encrypted filename (e.g. secret.txt.enc):")
+        if filename:
+            path = self.workspace.vault_dir / filename
+            if path.exists() and path.name.endswith(".enc"):
+                try:
+                    self.workspace.decrypt_vault_file(path)
+                    self._refresh_workspace_display()
+                    messagebox.showinfo("Vault Unlocked", f"File successfully decrypted back to plaintext:\n{filename[:-4]}")
+                except Exception as e:
+                    messagebox.showerror("Unlock Error", f"Failed to decrypt file:\n{e}")
+            else:
+                messagebox.showerror("Error", f"Encrypted file not found in /Vault folder: {filename}")
 
-        # TTL Self-Destruct Armed Banner
-        ttl_banner = ctk.CTkFrame(p3, fg_color=COLOR_SURFACE, corner_radius=8, border_width=1, border_color=COLOR_BORDER)
-        ttl_banner.pack(fill="x", padx=16, pady=(0, 16))
-
-        ctk.CTkLabel(
-            ttl_banner,
-            text="TTL / SELF-DESTRUCT ● ARMED",
-            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
-            text_color=COLOR_SUCCESS
-        ).pack(anchor="w", padx=12, pady=(8, 2))
-
-        ctk.CTkLabel(
-            ttl_banner,
-            text="17:12 OF 30:00 REMAINING",
-            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY
-        ).pack(anchor="w", padx=12)
-
-        ctk.CTkLabel(
-            ttl_banner,
-            text="Key zeroizes on expiry, logout, or process exit.",
-            font=ctk.CTkFont(family=FONT_BODY, size=9),
-            text_color=COLOR_TEXT_MUTED
-        ).pack(anchor="w", padx=12, pady=(2, 8))
-
-    def _refresh_workspace(self):
-        # Clear existing entries in files scroll
-        for widget in self.files_scroll.winfo_children():
-            widget.destroy()
-
+    def _refresh_workspace_display(self):
         files = self.workspace.list_files()
-
-        # If empty, create default mock items to match Section 1.pdf exactly
+        self.ws_box.configure(state="normal")
+        self.ws_box.delete("1.0", "end")
         if not files:
-            defaults = [
-                ("network_baseline.json", "12.4 KB", False),
-                ("operator_notes.md", "2.1 KB", False),
-                ("incident_report.pdf.enc", "2.4 MB", True),
-                ("credentials.env.enc", "1.2 KB", True),
-                ("access_policy.yaml.enc", "4.8 KB", True),
-                ("audit_2026-10-19.log.enc", "128 KB", True)
-            ]
-            for name, content, is_enc in defaults:
-                fpath = self.workspace.vault_dir / name
-                fpath.write_text(f"Mock content for {name}")
-            files = self.workspace.list_files()
+            self.ws_box.insert("end", "Physical /Vault folder empty.\nCreate files anywhere in Windows\ninside /Vault folder.\nAuto-encrypts on attack!")
+        else:
+            for f in files:
+                status = "🔒 [ENC]" if f.name.endswith(".enc") else "📄 [PLAIN]"
+                self.ws_box.insert("end", f"{status} {f.name}\n")
+        self.ws_box.configure(state="disabled")
 
-        enc_count = 0
-        plain_count = 0
-
-        for f in files:
-            is_enc = f.name.endswith(".enc")
-            if is_enc:
-                enc_count += 1
-            else:
-                plain_count += 1
-
-            # Card item
-            item_card = ctk.CTkFrame(self.files_scroll, fg_color=COLOR_SURFACE, height=48, corner_radius=6, border_width=1, border_color=COLOR_BORDER)
-            item_card.pack(fill="x", pady=3)
-            item_card.pack_propagate(False)
-
-            tag_color = COLOR_CYAN if is_enc else COLOR_TEXT_MUTED
-            tag_text = "[ENC]" if is_enc else "[PLAIN]"
-
-            btn = ctk.CTkButton(
-                item_card,
-                text=f"{f.name}",
-                font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold" if is_enc else "normal"),
-                fg_color="transparent",
-                hover_color=COLOR_CARD_HOVER,
-                text_color=COLOR_TEXT_PRIMARY,
-                anchor="w",
-                command=lambda target=f: self._select_file(target)
-            )
-            btn.pack(side="left", padx=8, fill="both", expand=True)
-
-            tag_lbl = ctk.CTkLabel(
-                item_card,
-                text=tag_text,
-                font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"),
-                text_color=tag_color
-            )
-            tag_lbl.pack(side="right", padx=10)
-
-        self.p1_count_badge.configure(text=f"{len(files):02d}")
-        self.p1_summary_lbl.configure(text=f"{enc_count} encrypted  /  {plain_count} plaintext")
-
-    def _select_file(self, fpath: Path):
-        self.selected_file = fpath
-        self.inspect_name_lbl.configure(text=fpath.name)
-        size_kb = fpath.stat().st_size / 1024.0 if fpath.exists() else 0.0
-        self.inspect_meta_lbl.configure(text=f"Object · {size_kb:.1f} KB · Verified Seal")
-
-    def _decrypt_action(self):
-        if not self.selected_file or not self.selected_file.name.endswith(".enc"):
-            # If no file selected, ask via dialog
-            filename = simpledialog.askstring("Decrypt Vault File", "Enter encrypted filename (e.g. incident_report.pdf.enc):")
-            if filename:
-                self.selected_file = self.workspace.vault_dir / filename
-            else:
-                return
-
-        if self.selected_file and self.selected_file.exists():
-            try:
-                self.workspace.decrypt_vault_file(self.selected_file)
-                self._refresh_workspace()
-                messagebox.showinfo("Vault Unlocked", f"File decrypted into /Vault Folder:\n{self.selected_file.name[:-4]}")
-            except Exception as e:
-                messagebox.showerror("Unlock Error", f"Decryption failed:\n{e}")
-
-    def _rotate_keys(self):
-        self.rotate_btn.configure(state="disabled", text="REVOKING & ROTATING...")
+    # --- Vault Handlers ---
+    def _load_default_vault_files(self):
+        vault_dir = Path(__file__).resolve().parents[2] / "data" / "vault"
+        vault_dir.mkdir(parents=True, exist_ok=True)
+        
+        sample_file = vault_dir / "secret_project_intel.txt"
+        if not sample_file.exists():
+            sample_file.write_text("CONFIDENTIAL: Project ShadowMind core vault assets.")
+        
         try:
-            files = list(self.workspace.vault_dir.glob("*.enc"))
-            old_k = SessionState.get_key()
-            new_k, elapsed = emergency_rotate_keys(old_k, files)
-            SessionState.set_key(new_k)
-
-            # Update fingerprint in UI
-            raw_hex = new_k.hex().upper()
-            self.key_fingerprint_lbl.configure(text=f"{raw_hex[:4]} : {raw_hex[4:8]} : •••• : {raw_hex[-4:]}")
-            messagebox.showinfo("Emergency Rotation Complete", f"Key revoked!\nAll vault files re-sealed with a new ephemeral key in {elapsed:.2f} ms.")
+            self.vault.encrypt_file(sample_file)
+            if sample_file not in self.protected_files:
+                self.protected_files.append(sample_file)
+            self._refresh_files_display()
         except Exception as e:
-            messagebox.showerror("Rotation Error", f"Rotation failed:\n{e}")
+            pass
+
+    def _add_file_to_vault(self):
+        filename = filedialog.askopenfilename(title="Select File to Protect in Vault")
+        if filename:
+            path = Path(filename)
+            try:
+                self.vault.encrypt_file(path)
+                if path not in self.protected_files:
+                    self.protected_files.append(path)
+                self._refresh_files_display()
+                messagebox.showinfo("Vault Success", f"File encrypted & protected:\n{path.name}")
+            except Exception as e:
+                messagebox.showerror("Vault Error", f"Failed to encrypt file:\n{e}")
+
+    def _decrypt_file_from_vault(self):
+        filename = filedialog.askopenfilename(title="Select Encrypted Vault File to Unlock")
+        if filename:
+            path = Path(filename)
+            try:
+                self.vault.decrypt_file(path)
+                messagebox.showinfo("Vault Unlocked", f"File successfully decrypted & unlocked:\n{path.name}")
+            except Exception as e:
+                messagebox.showerror("Unlock Error", f"Failed to decrypt file:\n{e}")
+
+    def _show_active_key(self):
+        key_hex = SessionState.get_key().hex()
+        messagebox.showinfo(
+            "Active RAM Session Key",
+            f"Active AES-256 Key (in RAM only):\n\n{key_hex}\n\nNote: Zero-wiped upon session logout."
+        )
+
+    def _trigger_emergency_rotation(self):
+        self.rotate_btn.configure(state="disabled", text="Rotating...")
+        try:
+            new_key, elapsed = emergency_rotate_keys(SessionState.get_key(), self.protected_files)
+            SessionState.set_key(new_key)
+            self.vault = AESVault(SessionState.get_key())
+            self.key_status_lbl.configure(text="ROTATED & SECURED", text_color=C_SUCCESS)
+            messagebox.showinfo(
+                "Emergency Rotation Complete",
+                f"All files re-encrypted successfully in {elapsed:.2f} ms!"
+            )
+        except Exception as e:
+            messagebox.showerror("Rotation Error", f"Emergency rotation failed:\n{e}")
         finally:
             self.rotate_btn.configure(state="normal", text="ROTATE KEY NOW")
+
+    def _refresh_files_display(self):
+        self.files_box.configure(state="normal")
+        self.files_box.delete("1.0", "end")
+        vault_dir = Path(__file__).resolve().parents[2] / "data" / "vault"
+        all_encrypted = list(vault_dir.glob("*.*"))
+        if not all_encrypted:
+            self.files_box.insert("end", "No encrypted files in vault.\n")
+        else:
+            for f in all_encrypted:
+                self.files_box.insert("end", f"🔒 [AES-256] {f.name}\n")
+        self.files_box.configure(state="disabled")
+
+    def destroy(self):
+        # TTL RAM zero-wipe of keys
+        if SessionState.get_key():
+            zero_wipe_ram_key(SessionState.get_key())
+        
+        # Optionally wipe plaintext files from physical Vault folder on logout/close (Zero-Trust Privacy)
+        try:
+            for f in self.workspace.list_files():
+                if not f.name.endswith(".enc"):
+                    f.unlink(missing_ok=True)
+            logger.info("TTL Privacy Wipe: Unencrypted files in physical Vault folder cleared on session close.")
+        except Exception as e:
+            pass
+
+        super().destroy()

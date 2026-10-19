@@ -10,13 +10,18 @@ from src.auth.auth import Session
 from src.honeypot.decoy_manager import DecoyManager
 from src.honeypot.interaction_log import InteractionLogger
 
-C_BG      = "#0d0f14"
-C_PANEL   = "#13161e"
-C_ACCENT  = "#00c8ff"
-C_WARNING = "#ffaa00"
-C_SUCCESS = "#00cc66"
-C_TEXT    = "#e0e0e0"
-C_SUBTEXT = "#888888"
+from ui.theme import (
+    COLOR_BG as C_BG,
+    COLOR_CARD as C_PANEL,
+    COLOR_CYAN as C_ACCENT,
+    COLOR_WARNING as C_WARNING,
+    COLOR_SUCCESS as C_SUCCESS,
+    COLOR_TEXT_PRIMARY as C_TEXT,
+    COLOR_TEXT_SECONDARY as C_SUBTEXT,
+    COLOR_BORDER as C_BORDER,
+    COLOR_SURFACE as C_SURFACE,
+    FONT_BRAND, FONT_MONO, FONT_BODY
+)
 
 
 class HoneypotTab(ctk.CTkFrame):

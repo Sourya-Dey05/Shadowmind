@@ -13,12 +13,17 @@ import customtkinter as ctk
 from pathlib import Path
 from src.auth.auth import Session
 
-C_BG      = "#0d0f14"
-C_PANEL   = "#13161e"
-C_ACCENT  = "#00c8ff"
-C_TEXT    = "#e0e0e0"
-C_SUBTEXT = "#888888"
-C_WARNING = "#ffaa00"
+from ui.theme import (
+    COLOR_BG as C_BG,
+    COLOR_CARD as C_PANEL,
+    COLOR_CYAN as C_ACCENT,
+    COLOR_TEXT_PRIMARY as C_TEXT,
+    COLOR_TEXT_SECONDARY as C_SUBTEXT,
+    COLOR_WARNING as C_WARNING,
+    COLOR_BORDER as C_BORDER,
+    COLOR_SURFACE as C_SURFACE,
+    FONT_BRAND, FONT_MONO, FONT_BODY
+)
 
 from src.utils.path_helper import get_resource_path
 
