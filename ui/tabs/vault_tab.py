@@ -19,7 +19,7 @@ from src.vault.aes_vault import AESVault
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.ttl_destruct import zero_wipe_ram_key
 from src.vault.session_state import SessionState
-from src.workspace.workspace_vault import LocalStorageVault
+from src.workspace.workspace_vault import ExternalVaultFolder
 
 C_BG      = "#0d0f14"
 C_PANEL   = "#13161e"
@@ -41,7 +41,7 @@ class VaultTab(ctk.CTkFrame):
         self.session = session
         
         self.vault = AESVault(SessionState.get_key())
-        self.workspace = LocalStorageVault()
+        self.workspace = ExternalVaultFolder()
         self.protected_files = []
 
         self._build()
@@ -195,32 +195,36 @@ class VaultTab(ctk.CTkFrame):
 
     # --- Workspace Handlers ---
     def _workspace_create_file(self):
-        filename = simpledialog.askstring("Workspace File", "Enter filename (e.g. notes.txt):")
+        filename = simpledialog.askstring("Vault Folder", "Enter filename (e.g. secret.txt):")
         if filename:
             content = simpledialog.askstring("File Content", "Enter plaintext content:")
             if content is not None:
-                self.workspace.create_or_edit_file(filename, content)
+                path = self.workspace.vault_dir / filename
+                path.write_text(content, encoding="utf-8")
                 self._refresh_workspace_display()
-                messagebox.showinfo("Workspace", f"Plaintext file created/edited: {filename}")
+                messagebox.showinfo("Vault Folder", f"File created in physical /Vault folder:\n{filename}")
 
     def _workspace_delete_file(self):
         filename = simpledialog.askstring("Delete File", "Enter exact filename to delete:")
         if filename:
-            if self.workspace.delete_file(filename):
+            path = self.workspace.vault_dir / filename
+            if path.exists():
+                path.unlink()
                 self._refresh_workspace_display()
-                messagebox.showinfo("Workspace", f"File deleted: {filename}")
+                messagebox.showinfo("Vault Folder", f"File deleted from /Vault:\n{filename}")
             else:
-                messagebox.showerror("Error", f"File not found: {filename}")
+                messagebox.showerror("Error", f"File not found in /Vault folder: {filename}")
 
     def _refresh_workspace_display(self):
-        files = self.workspace.list_workspace_files()
+        files = self.workspace.list_files()
         self.ws_box.configure(state="normal")
         self.ws_box.delete("1.0", "end")
         if not files:
-            self.ws_box.insert("end", "Workspace empty.\nCreate files freely.\nThey auto-lock on attack!")
+            self.ws_box.insert("end", "Physical /Vault folder empty.\nCreate files anywhere in Windows\ninside /Vault folder.\nAuto-encrypts on attack!")
         else:
             for f in files:
-                self.ws_box.insert("end", f"📄 [PLAIN] {f.name}\n")
+                status = "🔒 [ENC]" if f.name.endswith(".enc") else "📄 [PLAIN]"
+                self.ws_box.insert("end", f"{status} {f.name}\n")
         self.ws_box.configure(state="disabled")
 
     # --- Vault Handlers ---
