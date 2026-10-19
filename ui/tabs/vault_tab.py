@@ -20,6 +20,7 @@ from src.vault.rotation import emergency_rotate_keys
 from src.vault.ttl_destruct import zero_wipe_ram_key
 from src.vault.session_state import SessionState
 from src.workspace.workspace_vault import ExternalVaultFolder
+from ui.animations import CyberAnimator
 
 from ui.theme import (
     COLOR_BG as C_BG,
