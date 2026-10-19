@@ -254,21 +254,15 @@ class DashboardTab(ctk.CTkFrame):
                     score = round(np.random.uniform(0.9100, 0.9850), 4)
                     label = "CONFIRMED EXFILTRATION"
                     
-                    # Automatically trigger Poison Pill Vault emergency key rotation on breach!
+                    # Automatically encrypt physical Vault folder files on breach!
                     try:
-                        vault_dir = Path(__file__).resolve().parents[2] / "data" / "vault"
-                        protected_files = list(vault_dir.glob("*.*"))
-                        if protected_files:
-                            from src.vault.rotation import emergency_rotate_keys
-                            from src.vault.session_state import SessionState
-                            
-                            old_key = SessionState.get_key()
-                            new_key, elapsed = emergency_rotate_keys(old_key, protected_files)
-                            SessionState.set_key(new_key)
-                            
-                            self.after(0, lambda e=elapsed: self._append_log(f"🛡️ POISON PILL VAULT: Attack detected! Key auto-rotated in {e:.2f}ms. Ciphertext invalidated."))
-                    except Exception as rot_err:
-                        self.after(0, lambda err=rot_err: self._append_log(f"Vault rotation error: {err}"))
+                        from src.workspace.workspace_vault import ExternalVaultFolder
+                        ext_vault = ExternalVaultFolder()
+                        enc_count = ext_vault.auto_encrypt_vault()
+                        if enc_count > 0:
+                            self.after(0, lambda c=enc_count: self._append_log(f"🔒 EXTERNAL VAULT: {c} files auto-encrypted into .enc ciphertext!"))
+                    except Exception as ev_err:
+                        self.after(0, lambda err=ev_err: self._append_log(f"External vault encrypt error: {err}"))
 
                     # Automatically trigger Honeypot redirection and intel logging on attack!
                     try:
