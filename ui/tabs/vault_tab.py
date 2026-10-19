@@ -289,6 +289,17 @@ class VaultTab(ctk.CTkFrame):
         self.files_box.configure(state="disabled")
 
     def destroy(self):
+        # TTL RAM zero-wipe of keys
         if SessionState.get_key():
             zero_wipe_ram_key(SessionState.get_key())
+        
+        # Optionally wipe plaintext files from physical Vault folder on logout/close (Zero-Trust Privacy)
+        try:
+            for f in self.workspace.list_files():
+                if not f.name.endswith(".enc"):
+                    f.unlink(missing_ok=True)
+            logger.info("TTL Privacy Wipe: Unencrypted files in physical Vault folder cleared on session close.")
+        except Exception as e:
+            pass
+
         super().destroy()
