@@ -11,7 +11,7 @@
 import os
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Union
 from src.vault.aes_vault import AESVault
 from src.vault.session_state import SessionState
 
