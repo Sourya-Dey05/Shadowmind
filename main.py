@@ -41,9 +41,13 @@ def _setup_logging():
     except Exception:
         level, to_file, log_path = logging.INFO, False, None
 
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
-    handlers = [stdout_handler]
+    try:
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        if sys.stdout and hasattr(sys.stdout, 'fileno'):
+            stdout_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
+        handlers = [stdout_handler]
+    except Exception:
+        handlers = [logging.StreamHandler(sys.stdout)]
 
     if to_file and log_path:
         log_path.parent.mkdir(parents=True, exist_ok=True)
