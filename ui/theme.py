@@ -4,32 +4,32 @@
 #          from the Figma design specification in Section 1.pdf.
 # =============================================================================
 
-# Primary Background & Surface Palette
-COLOR_BG            = "#07080e"   # Deep Void Background
-COLOR_SURFACE       = "#0d1017"   # Panel Surface
-COLOR_CARD          = "#10141c"   # Card Background
-COLOR_CARD_HOVER    = "#141923"   # Card Highlight State
-COLOR_BORDER        = "#1b2230"   # Subtle structural border
-COLOR_BORDER_FOCUS  = "#00c2f7"   # Active cyan focus ring
+# Primary Background & Surface Palette — OLED Museum Dark
+COLOR_BG            = "#050608"   # Deepest OLED Black
+COLOR_SURFACE       = "#0B0E14"   # Elevated Glass Surface
+COLOR_CARD          = "#0F131D"   # Frosted Card Container
+COLOR_CARD_HOVER    = "#151B28"   # Interactive Card Hover
+COLOR_BORDER        = "#1F293D"   # Crisp Structural Border
+COLOR_BORDER_FOCUS  = "#00E5FF"   # Electric Cyan Focus Ring
 
 # Brand & Accent Tokens
-COLOR_CYAN          = "#00c2f7"   # Primary Brand Cyan
-COLOR_CYAN_DIM      = "#008cb3"   # Muted Cyan
-COLOR_CYAN_GLOW     = "#052636"   # Soft cyan glow backdrop
+COLOR_CYAN          = "#00E5FF"   # Electric Neon Cyan
+COLOR_CYAN_DIM      = "#008399"   # Muted Cyber Cyan
+COLOR_CYAN_GLOW     = "#003642"   # Glow Backdrop
 
 # State Tokens
-COLOR_SUCCESS       = "#00c663"   # Active / Healthy / Verified Green
-COLOR_WARNING       = "#ffaa00"   # Warning / Guard Amber
-COLOR_DANGER        = "#ff4343"   # Alert / Confirmed Threat Crimson
-COLOR_PURPLE        = "#a855f7"   # Key Reference / Enclave Tag
+COLOR_SUCCESS       = "#00FF66"   # Neon Matrix Green
+COLOR_WARNING       = "#FFB800"   # Amber Warning
+COLOR_DANGER        = "#FF2E2E"   # Crimson Alert Red
+COLOR_PURPLE        = "#B026FF"   # Enclave Tag
 
 # Text Hierarchy
-COLOR_TEXT_PRIMARY   = "#e8edf2"  # Main high-contrast headings
-COLOR_TEXT_SECONDARY = "#94a3b8"  # Subtitles, labels, descriptions
-COLOR_TEXT_MUTED     = "#55647a"  # Timestamps, metadata, subtle hints
-COLOR_TEXT_DIM       = "#3b4759"  # Borders & decorative marks
+COLOR_TEXT_PRIMARY   = "#FFFFFF"  # Pure White Headings
+COLOR_TEXT_SECONDARY = "#A0AEC0"  # Crisp Slate Subtitles
+COLOR_TEXT_MUTED     = "#718096"  # Subtle Meta / Timestamps
+COLOR_TEXT_DIM       = "#4A5568"  # Dividers
 
-# Fonts - Clean, high-readability Windows native fonts matching Figma
+# Fonts
 FONT_TITLE  = "Segoe UI"
 FONT_BODY   = "Segoe UI"
 FONT_MONO   = "Consolas"
