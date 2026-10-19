@@ -79,17 +79,24 @@ class VaultTab(ctk.CTkFrame):
         ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
 
         ctk.CTkButton(
+            ws_frame, text="🔓 Unlock / Decrypt Vault",
+            command=self._workspace_decrypt_file,
+            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
+            corner_radius=8
+        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
+
+        ctk.CTkButton(
             ws_frame, text="🗑️ Delete File",
             command=self._workspace_delete_file,
             fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
             corner_radius=8
-        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
+        ).grid(row=4, column=0, padx=12, pady=(0, 6), sticky="ew")
 
         ctk.CTkLabel(
             ws_frame,
             text="💡 Normal daily files.\nAuto-encrypts instantly on breach!",
             font=ctk.CTkFont(size=10), text_color=C_SUBTEXT, justify="center"
-        ).grid(row=4, column=0, padx=12, pady=(0, 12), sticky="ew")
+        ).grid(row=5, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # =====================================================================
         # COLUMN 1: Static Poison Pill Vault (Encrypted Storage)
@@ -204,7 +211,19 @@ class VaultTab(ctk.CTkFrame):
                 self._refresh_workspace_display()
                 messagebox.showinfo("Vault Folder", f"File created in physical /Vault folder:\n{filename}")
 
-    def _workspace_delete_file(self):
+    def _workspace_decrypt_file(self):
+        filename = simpledialog.askstring("Decrypt Vault File", "Enter exact encrypted filename (e.g. secret.txt.enc):")
+        if filename:
+            path = self.workspace.vault_dir / filename
+            if path.exists() and path.name.endswith(".enc"):
+                try:
+                    self.workspace.decrypt_vault_file(path)
+                    self._refresh_workspace_display()
+                    messagebox.showinfo("Vault Unlocked", f"File successfully decrypted back to plaintext:\n{filename[:-4]}")
+                except Exception as e:
+                    messagebox.showerror("Unlock Error", f"Failed to decrypt file:\n{e}")
+            else:
+                messagebox.showerror("Error", f"Encrypted file not found in /Vault folder: {filename}")
         filename = simpledialog.askstring("Delete File", "Enter exact filename to delete:")
         if filename:
             path = self.workspace.vault_dir / filename
