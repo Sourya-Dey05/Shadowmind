@@ -23,6 +23,7 @@ from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.vault_tab import VaultTab
 from ui.tabs.honeypot_tab import HoneypotTab
 from ui.tabs.settings_tab import SettingsTab
+from ui.animations import CyberAnimator
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -103,12 +104,13 @@ class LoginFrame(ctk.CTkFrame):
         self.error_label.grid(row=5, column=0, pady=(0, 4))
 
         self.login_btn = ctk.CTkButton(
-            card, text="Login", command=self._attempt_login,
-            width=312, height=40, corner_radius=8,
+            card, text="INITIALIZE SECURE SESSION", command=self._attempt_login,
+            width=312, height=44, corner_radius=8,
             fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(family="Courier New", size=13, weight="bold")
         )
         self.login_btn.grid(row=6, column=0, padx=24, pady=(4, 24))
+        CyberAnimator.apply_glow_effect(self.login_btn, C_ACCENT, "#33d6ff", C_ACCENT)
 
         # Bind Enter key
         self.pw_entry.bind("<Return>", lambda e: self._attempt_login())
@@ -179,6 +181,24 @@ class ShadowMindApp(ctk.CTk):
 
     def _on_login_success(self, session: Session):
         self.session = session
+        
+        # Smooth transition effect: flash loading state
+        for w in self.winfo_children():
+            w.destroy()
+        
+        loading_frame = ctk.CTkFrame(self, fg_color=C_BG)
+        loading_frame.pack(fill="both", expand=True)
+        
+        ctk.CTkLabel(
+            loading_frame, text="ESTABLISHING SECURE ZERO-TRUST TUNNEL...",
+            font=ctk.CTkFont(family="Courier New", size=16, weight="bold"),
+            text_color=C_ACCENT
+        ).place(relx=0.5, rely=0.5, anchor="center")
+        
+        self.update()
+        import time
+        time.sleep(0.6)  # High quality cinematic transition delay
+        
         self._build_main_ui()
         self._start_ttl_watcher()
 
