@@ -23,7 +23,7 @@ from src.detection.engine import DetectionEngine
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.session_state import SessionState
 from src.vault.ttl_destruct import zero_wipe_ram_key
-from src.workspace.workspace_vault import LocalStorageVault
+from src.workspace.workspace_vault import ExternalVaultFolder
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -87,11 +87,11 @@ class PipelineOrchestrator:
             redir_entry = self.redirector.handle_redirect(source_ip, requested_resource)
             response_actions.append(f"HONEYPOT_REDIRECT: {redir_entry}")
 
-            # Action 1.5: Local Storage Auto-Encrypt (Encrypt all plaintext files in local storage instantly!)
-            storage = LocalStorageVault()
-            encrypted_count = storage.auto_encrypt_storage()
+            # Action 1.5: External Vault Folder Auto-Encrypt (Encrypt all plaintext files in physical Vault folder instantly!)
+            ext_vault = ExternalVaultFolder()
+            encrypted_count = ext_vault.auto_encrypt_vault()
             if encrypted_count > 0:
-                response_actions.append(f"LOCAL_STORAGE_AUTO_ENCRYPTED: {encrypted_count} files encrypted into ciphertext")
+                response_actions.append(f"EXTERNAL_VAULT_AUTO_ENCRYPTED: {encrypted_count} physical vault files encrypted into ciphertext")
 
             # Action 2: Poison Pill Emergency Key Rotation
             protected_files = list(self.vault_dir.glob("*.*"))

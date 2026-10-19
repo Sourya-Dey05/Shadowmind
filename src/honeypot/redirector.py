@@ -8,6 +8,7 @@
 # =============================================================================
 
 import logging
+from pathlib import Path
 from src.honeypot.decoy_manager import DecoyManager
 from src.honeypot.interaction_log import InteractionLogger
 
