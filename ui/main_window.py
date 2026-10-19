@@ -43,7 +43,7 @@ from ui.theme import (
     COLOR_TEXT_SECONDARY as C_SUBTEXT,
     COLOR_BORDER as C_BORDER,
     COLOR_SURFACE as C_SURFACE,
-    FONT_BRAND, FONT_MONO, FONT_BODY
+    FONT_BRAND, FONT_MONO, FONT_BODY, FONT_TITLE
 )
 
 # =============================================================================
