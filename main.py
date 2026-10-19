@@ -27,11 +27,13 @@ sys.path.insert(0, str(ROOT))
 # Logging setup — must happen before any other import uses logging
 # ---------------------------------------------------------------------------
 
+from src.utils.path_helper import get_resource_path
+
 def _setup_logging():
     """Configure logging from thresholds.yaml. Falls back to INFO on error."""
     try:
         import yaml
-        cfg_path = ROOT / "configs" / "thresholds.yaml"
+        cfg_path = get_resource_path("configs/thresholds.yaml")
         with open(cfg_path, "r") as f:
             cfg = yaml.safe_load(f)
         log_cfg  = cfg.get("logging", {})
@@ -110,7 +112,7 @@ def _ensure_dataset():
         return
 
     import yaml
-    cfg_path = ROOT / "configs" / "thresholds.yaml"
+    cfg_path = get_resource_path("configs/thresholds.yaml")
     with open(cfg_path, "r") as f:
         cfg = yaml.safe_load(f)
     out_path = ROOT / cfg["data"]["output_path"]

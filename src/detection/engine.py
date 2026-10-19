@@ -23,8 +23,10 @@ from src.data.graph_builder import build_enterprise_graph
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "thresholds.yaml"
-MODEL_DIR   = Path(__file__).resolve().parents[2] / "models" / "detection"
+from src.utils.path_helper import get_resource_path
+
+CONFIG_PATH = get_resource_path("configs/thresholds.yaml")
+MODEL_DIR   = get_resource_path("models/detection")
 
 
 class DetectionEngine:

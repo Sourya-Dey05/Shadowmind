@@ -20,7 +20,9 @@ C_TEXT    = "#e0e0e0"
 C_SUBTEXT = "#888888"
 C_WARNING = "#ffaa00"
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "thresholds.yaml"
+from src.utils.path_helper import get_resource_path
+
+CONFIG_PATH = get_resource_path("configs/thresholds.yaml")
 
 
 def _load_cfg() -> dict:
