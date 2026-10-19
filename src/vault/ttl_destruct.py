@@ -31,7 +31,7 @@ def zero_wipe_ram_key(session_key: bytes) -> bool:
         # Delete references
         del mutable_key
         del session_key
-        logger.info("🔒 TTL SELF-DESTRUCT: Session decryption key zero-wiped from RAM.")
+        logger.info("TTL SELF-DESTRUCT: Session decryption key zero-wiped from RAM.")
         return True
     except Exception as e:
         logger.error(f"Failed to zero-wipe RAM key: {e}")

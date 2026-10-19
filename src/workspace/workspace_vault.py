@@ -33,6 +33,10 @@ class LocalStorageVault:
         """List all files in local storage."""
         return [f for f in self.storage_dir.glob("*.*") if not f.name.endswith(".enc")]
 
+    def list_workspace_files(self) -> List[Path]:
+        """Alias for compatibility with vault tab."""
+        return self.list_files()
+
     def save_file(self, filename: str, content: str) -> Path:
         """Create or edit a file in local storage in plaintext."""
         path = self.storage_dir / filename
