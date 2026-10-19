@@ -1,240 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShadowMind — Autonomous Zero-Trust Defense System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>ShadowMind — Autonomous Zero-Trust AI Defense System</title>
+    <!-- Tailwind CSS CDN for high-end UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#000000',
+                        darkSurface: '#0c130e',
+                        cyberCyan: '#00FF41',
+                        cyberRed: '#EF4444',
+                        darkBorder: '#1F1F1F',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #E0E0E0;
+            font-family: 'Inter', sans-serif;
+        }
+        .glow-green {
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+        }
+        .glow-box {
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
+        }
+        .scanline {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanline::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+    </style>
 </head>
-<body>
-    <!-- Background Canvas for Matrix / Cyber Particles -->
-    <canvas id="cyber-canvas"></canvas>
+<body class="bg-darkBg text-[#E0E0E0] antialiased selection:bg-cyberCyan selection:text-black">
 
-    <!-- Navigation -->
-    <nav class="navbar glass">
-        <div class="logo">
-            <i class="fa-solid fa-shield-halved"></i> SHADOW<span>MIND</span>
+    <!-- Top Security Header / Ticker -->
+    <div class="bg-[#0a110d] border-b border-darkBorder py-2 px-4 text-xs font-mono text-cyberCyan flex justify-between items-center z-50 relative">
+        <div class="flex items-center space-x-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-cyberCyan animate-ping"></span>
+            <span>SHADOWMIND ENCLAVE // BUILD 24.10.19 // ZERO-TRUST IMMUNE SYSTEM</span>
         </div>
-        <div class="nav-links">
-            <a href="#features">Architecture</a>
-            <a href="#demo">Live Demo</a>
-            <a href="#benchmarks">Metrics</a>
-            <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="github-link"><i class="fa-brands fa-github"></i> GitHub</a>
+        <div class="hidden md:flex items-center space-x-6 text-[#94A3B8]">
+            <span>ENCRYPTION: AES-256-GCM</span>
+            <span>STATUS: ACTIVE & ARMED</span>
+            <span>ACCURACY: 99.96%</span>
         </div>
-        <div class="nav-action">
-            <a href="#download" class="nav-download-btn"><i class="fa-solid fa-download"></i> Get Installer</a>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 bg-[#000000]/90 backdrop-blur-md border-b border-darkBorder z-40 px-6 lg:px-12 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-[#0c130e] border border-cyberCyan/40 flex items-center justify-center text-cyberCyan font-bold text-xl shadow-[0_0_15px_rgba(0,255,65,0.2)]">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span class="font-mono font-bold text-lg tracking-wider text-white">SHADOW<span class="text-cyberCyan">MIND</span></span>
+        </div>
+        
+        <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-[#94A3B8]">
+            <a href="#features" class="hover:text-cyberCyan transition-colors">Architecture</a>
+            <a href="#how-it-works" class="hover:text-cyberCyan transition-colors">Defense Loop</a>
+            <a href="#metrics" class="hover:text-cyberCyan transition-colors">Benchmarks</a>
+            <a href="#docs" class="hover:text-cyberCyan transition-colors">Documentation</a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="hidden sm:inline-flex items-center space-x-2 bg-[#181818] hover:bg-[#222] border border-darkBorder px-4 py-2 rounded-lg text-sm font-mono text-white transition-all">
+                <i class="fa-brands fa-github text-lg"></i>
+                <span>GitHub</span>
+            </a>
+            <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-5 py-2.5 rounded-lg text-sm transition-all shadow-[0_0_20px_rgba(0,255,65,0.3)] flex items-center space-x-2">
+                <i class="fa-solid fa-download"></i>
+                <span>DOWNLOAD .EXE</span>
+            </a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="hero">
-        <div class="hero-badge">
-            <i class="fa-solid fa-circle-nodes"></i> GROUP GRP-45 // AUTHOR: SOURYA DEY
-        </div>
-        <h1>The Self-Destructing<br><span class="gradient-text">AI Defense System</span></h1>
-        <p class="subtitle">An enterprise-grade, zero-trust framework uniting slow attack neural detection, dynamic honeypots, and millisecond RAM key self-destruct.</p>
-        
-        <div class="cta-container">
-            <a href="#download" class="btn btn-glow">
-                <i class="fa-brands fa-windows"></i> Download Installer (.exe)
-                <span class="btn-subtext">v1.0.0 Stable • Signed Binary</span>
-            </a>
-            <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="btn btn-outline">
-                <i class="fa-solid fa-code"></i> Explore Source Code
-            </a>
+    <header class="relative px-6 lg:px-12 pt-20 pb-28 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div class="flex-1 text-left">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0c130e] border border-cyberCyan/30 text-cyberCyan font-mono text-xs mb-6">
+                <i class="fa-solid fa-circle-nodes"></i>
+                <span>GROUP GRP-45 • AUTHOR: SOURYA DEY</span>
+            </div>
+            
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 font-mono">
+                THE SELF-DESTRUCTING <br>
+                <span class="text-cyberCyan glow-green">AI DEFENSE SYSTEM</span>
+            </h1>
+            
+            <p class="text-lg text-[#94A3B8] max-w-xl mb-10 leading-relaxed">
+                An integrated zero-trust framework for low-and-slow attack detection, dynamic honeypots, and millisecond RAM key self-destruct. Built for absolute data immunity.
+            </p>
+            
+            <div class="flex flex-wrap gap-4">
+                <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-8 py-4 rounded-xl text-base transition-all shadow-[0_0_25px_rgba(0,255,65,0.4)] flex items-center space-x-3">
+                    <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                    <div>
+                        <div class="leading-tight">Download ShadowMind.exe</div>
+                        <div class="text-xs font-normal opacity-85">Windows Standalone • v1.0.0</div>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="bg-[#181818] hover:bg-[#222] border border-darkBorder px-8 py-4 rounded-xl text-base font-mono text-white transition-all flex items-center space-x-3">
+                    <i class="fa-solid fa-code text-lg"></i>
+                    <span>Source Repository</span>
+                </a>
+            </div>
+
+            <div class="mt-8 flex items-center space-x-6 text-xs font-mono text-[#94A3B8]">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-check text-cyberCyan"></i>
+                    <span>No Python Required</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-check text-cyberCyan"></i>
+                    <span>SHA-256 Verified Binary</span>
+                </div>
+            </div>
         </div>
 
-        <div class="terminal-preview">
-            <div class="terminal-header">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
-                <span class="terminal-title">shadowmind-core.exe — secure-runtime</span>
+        <!-- Terminal Preview Box -->
+        <div class="w-full lg:w-[500px] bg-[#0c130e] border border-darkBorder rounded-2xl p-6 glow-box scanline shadow-2xl">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-darkBorder">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div class="font-mono text-xs text-[#94A3B8]">shadowmind-kernel.exe</div>
             </div>
-            <div class="terminal-body">
-                <p><span class="prompt">[INFO]</span> ShadowMind AI Detection Engine initialized (CNN + LSTM + HoneyGraph GNN)</p>
-                <p><span class="prompt">[INFO]</span> Poison Pill Vault armed with AES-256 Fernet RAM keys...</p>
-                <p><span class="prompt">[SUCCESS]</span> Zero-Trust Immune System ACTIVE. CICIDS2017 Accuracy: 99.96%</p>
-                <p class="blink"><span class="prompt">></span> Waiting for incoming telemetry or multi-hop intrusion vectors...</p>
+            <div class="font-mono text-xs text-[#E0E0E0] space-y-3 leading-relaxed">
+                <p class="text-cyberCyan">[INIT] Loading PyTorch neural ensemble (CNN + LSTM + GNN)...</p>
+                <p>[INFO] HoneyGraph GNN topology analyzed 8 enterprise nodes.</p>
+                <p class="text-yellow-400">[MONITOR] Port 8080 active. Awaiting network telemetry...</p>
+                <p class="text-red-400">[INTRUSION DETECTED] Multi-hop probe from IP 192.168.1.15</p>
+                <p class="text-cyberCyan font-bold">[POISON PILL] AES-256 keys auto-rotated in 18.42 ms!</p>
+                <p class="text-cyberCyan font-bold">[HONEYPOT] Attacker diverted to decoy shared drive.</p>
+                <p class="text-[#94A3B8] animate-pulse">> RAM zero-wipe armed for session expiry...</p>
             </div>
         </div>
     </header>
 
-    <!-- Features Grid -->
-    <section id="features" class="features">
-        <div class="section-header">
-            <h2>Four Pillars of Autonomous Defense</h2>
-            <p>Engineered to defeat low-and-slow data exfiltration before damage occurs.</p>
+    <!-- Core Architecture Features -->
+    <section id="features" class="py-24 px-6 lg:px-12 max-w-7xl mx-auto border-t border-darkBorder">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-white font-mono mb-4">FOUR PILLARS OF IMMUNITY</h2>
+            <p class="text-[#94A3B8]">Engineered to defeat low-and-slow data exfiltration before enterprise damage occurs.</p>
         </div>
 
-        <div class="grid">
-            <div class="glass-card">
-                <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
-                <h3>AI Detection Engine</h3>
-                <p>Combines 1D Spatial CNN, Temporal LSTM, and PyTorch Geometric HoneyGraph GNN to spot coordinated network anomalies invisible to traditional IDSs.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Card 1 -->
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3 font-mono">AI Detection Engine</h3>
+                <p class="text-[#94A3B8] text-sm leading-relaxed">
+                    An ensemble of 1D Spatial CNN (detecting packet spikes), Temporal LSTM (detecting periodic slow beacons), and a PyTorch Geometric HoneyGraph GNN reasoning across network topology.
+                </p>
             </div>
-            <div class="glass-card">
-                <div class="icon-box"><i class="fa-solid fa-key"></i></div>
-                <h3>Poison Pill Vault</h3>
-                <p>Holds AES-256 session keys exclusively in RAM. Triggers emergency re-encryption in &lt; 50ms upon breach detection, invalidating stolen ciphertext.</p>
+
+            <!-- Card 2 -->
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3 font-mono">Poison Pill Vault</h3>
+                <p class="text-[#94A3B8] text-sm leading-relaxed">
+                    Holds AES-256 session keys exclusively in RAM. Upon confirmed exfiltration, emergency rotation re-encrypts all vault and local storage files in under 50ms, invalidating stolen ciphertext.
+                </p>
             </div>
-            <div class="glass-card">
-                <div class="icon-box"><i class="fa-solid fa-spider"></i></div>
-                <h3>Dynamic Honeypot</h3>
-                <p>Autonomously deploys trap files (AWS keys, financial databases), intercepts attackers, serves corporate fake shares, and logs interaction intel.</p>
+
+            <!-- Card 3 -->
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-spider"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3 font-mono">Dynamic Honeypot</h3>
+                <p class="text-[#94A3B8] text-sm leading-relaxed">
+                    Autonomously deploys trap files (fake AWS keys, payroll spreadsheets, database dumps), serves an interactive corporate share to attackers, and logs exact decoy interactions.
+                </p>
             </div>
-            <div class="glass-card">
-                <div class="icon-box"><i class="fa-solid fa-fire-extinguisher"></i></div>
-                <h3>TTL Self-Destruct</h3>
-                <p>Upon session expiry or logout, executes a low-level RAM zero-wipe (`memset`) across all decryption keys, leaving zero residual footprint.</p>
+
+            <!-- Card 4 -->
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-fire-extinguisher"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3 font-mono">TTL Self-Destruct</h3>
+                <p class="text-[#94A3B8] text-sm leading-relaxed">
+                    Upon session expiry, manual logout, or process close, executes a low-level RAM zero-wipe (`memset`) across all decryption keys, guaranteeing zero residual memory footprint.
+                </p>
             </div>
         </div>
     </section>
 
-    <!-- Interactive Demo Architecture -->
-    <section id="demo" class="demo-section">
-        <div class="section-header">
-            <h2>Live Autonomous Defense Loop</h2>
-            <p>How ShadowMind reacts to a multi-hop proxy intrusion in real time.</p>
+    <!-- How It Works / Defense Loop -->
+    <section id="how-it-works" class="py-24 px-6 lg:px-12 max-w-7xl mx-auto border-t border-darkBorder">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-white font-mono mb-4">AUTONOMOUS DEFENSE LOOP</h2>
+            <p class="text-[#94A3B8]">How ShadowMind reacts to a multi-hop proxy intrusion in milliseconds.</p>
         </div>
 
-        <div class="pipeline-container glass">
-            <div class="pipeline-step">
-                <div class="step-num">01</div>
-                <h4>Telemetry Ingest</h4>
-                <p>Monitors OS audit logs, local physical /Vault folder, and port 8080 network streams.</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
+                <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">01</div>
+                <h4 class="text-white font-mono font-bold mb-2">Telemetry Ingest</h4>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Monitors local physical /Vault folder, OS logs, and port 8080 cross-device streams.</p>
             </div>
-            <div class="pipeline-arrow"><i class="fa-solid fa-arrow-right-long"></i></div>
-            <div class="pipeline-step">
-                <div class="step-num">02</div>
-                <h4>GNN Analysis</h4>
-                <p>HoneyGraph evaluates multi-hop graph edges (Device A ➔ Device B Proxy ➔ Laptop).</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
+                <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">02</div>
+                <h4 class="text-white font-mono font-bold mb-2">GNN Analysis</h4>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">HoneyGraph evaluates multi-hop graph edges (Device A ➔ Device B Proxy ➔ Laptop).</p>
             </div>
-            <div class="pipeline-arrow"><i class="fa-solid fa-arrow-right-long"></i></div>
-            <div class="pipeline-step">
-                <div class="step-num">03</div>
-                <h4>Poison Pill</h4>
-                <p>Instantly auto-encrypts local Vault files and rotates AES RAM keys in &lt; 50ms.</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
+                <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">03</div>
+                <h4 class="text-white font-mono font-bold mb-2">Poison Pill</h4>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Instantly auto-encrypts local Vault files and rotates AES RAM keys in &lt; 50ms.</p>
             </div>
-            <div class="pipeline-arrow"><i class="fa-solid fa-arrow-right-long"></i></div>
-            <div class="pipeline-step">
-                <div class="step-num">04</div>
-                <h4>Deception Trap</h4>
-                <p>Diverts attacker into Honeypot shared drive and logs interaction intelligence.</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
+                <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">04</div>
+                <h4 class="text-white font-mono font-bold mb-2">Deception Trap</h4>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Diverts attacker into Honeypot shared drive and logs interaction intelligence.</p>
             </div>
         </div>
     </section>
 
     <!-- Benchmarks -->
-    <section id="benchmarks" class="metrics">
-        <div class="section-header">
-            <h2>CICIDS2017 Benchmark Metrics</h2>
-            <p>Rigorous validation against real-world intrusion datasets.</p>
+    <section id="metrics" class="py-24 px-6 lg:px-12 max-w-7xl mx-auto border-t border-darkBorder">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-white font-mono mb-4">CICIDS2017 BENCHMARK METRICS</h2>
+            <p class="text-[#94A3B8]">Rigorously validated against real-world intrusion and exfiltration datasets.</p>
         </div>
 
-        <div class="metrics-grid">
-            <div class="glass-card metric-card">
-                <h3>99.96%</h3>
-                <p>Test Accuracy</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl">
+                <div class="text-4xl font-extrabold text-cyberCyan font-mono mb-2">99.96%</div>
+                <div class="text-[#94A3B8] text-sm">Test Accuracy</div>
             </div>
-            <div class="glass-card metric-card">
-                <h3>0.9996</h3>
-                <p>F1-Score</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl">
+                <div class="text-4xl font-extrabold text-cyberCyan font-mono mb-2">0.9996</div>
+                <div class="text-[#94A3B8] text-sm">F1-Score</div>
             </div>
-            <div class="glass-card metric-card">
-                <h3>&lt; 50ms</h3>
-                <p>Rotation Latency</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl">
+                <div class="text-4xl font-extrabold text-cyberCyan font-mono mb-2">&lt; 50ms</div>
+                <div class="text-[#94A3B8] text-sm">Rotation Latency</div>
             </div>
-            <div class="glass-card metric-card">
-                <h3>0</h3>
-                <p>False Negatives</p>
+            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl">
+                <div class="text-4xl font-extrabold text-cyberCyan font-mono mb-2">0</div>
+                <div class="text-[#94A3B8] text-sm">False Negatives</div>
             </div>
         </div>
     </section>
 
     <!-- Download Section -->
-    <section id="download" class="download-section">
-        <div class="download-box glass">
-            <h2>Ready to Deploy ShadowMind?</h2>
-            <p>Download the official standalone Windows executable. Pre-packaged with AI models, AES-256 vault engine, and automated honeypot listener—no Python installation required.</p>
+    <section id="download" class="py-24 px-6 lg:px-12 max-w-5xl mx-auto">
+        <div class="bg-[#0c130e] border border-cyberCyan/40 p-12 rounded-3xl text-center glow-box relative overflow-hidden">
+            <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-cyberCyan/10 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div class="download-action">
-                <a href="https://github.com/Sourya-Dey05/Shadowmind/releases/download/v1.0.0/ShadowMind.exe" class="btn btn-glow btn-large" id="download-btn">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> Download ShadowMind.exe (266 MB)
-                </a>
-                <span class="file-info"><i class="fa-solid fa-shield-check"></i> Standalone Executable • Double-click & Run</span>
+            <h2 class="text-3xl lg:text-4xl font-bold text-white font-mono mb-4">READY TO DEPLOY SHADOWMIND?</h2>
+            <p class="text-[#94A3B8] max-w-xl mx-auto mb-8 text-sm leading-relaxed">
+                Download the standalone Windows executable. Pre-packaged with AI models, AES-256 vault engine, and automated honeypot listener—no Python required.
+            </p>
+
+            <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="inline-flex items-center space-x-3 bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-10 py-5 rounded-2xl text-lg transition-all shadow-[0_0_30px_rgba(0,255,65,0.4)]">
+                <i class="fa-solid fa-cloud-arrow-down text-2xl"></i>
+                <div class="text-left">
+                    <div class="leading-tight">Download ShadowMind.exe</div>
+                    <div class="text-xs font-normal opacity-80">v1.0.0 Stable • Standalone Binary</div>
+                </div>
+            </a>
+            
+            <div class="mt-6 text-xs font-mono text-[#94A3B8]">
+                <i class="fa-solid fa-shield-check text-cyberCyan mr-1"></i> SHA-256 Verified • Direct Binary Download
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
+    <footer class="border-t border-darkBorder py-8 px-6 text-center text-xs font-mono text-[#94A3B8]">
         <p>&copy; 2026 ShadowMind Defense System (Group GRP-45 • Author: Sourya Dey). Licensed under MIT.</p>
     </footer>
 
-    <!-- Interactive JS Script -->
-    <script>
-        // Cyber Particle Background Animation
-        const canvas = document.getElementById('cyber-canvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        const particles = [];
-        const particleCount = 60;
-
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.8,
-                vy: (Math.random() - 0.5) * 0.8,
-                size: Math.random() * 2 + 1
-            });
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 200, 255, 0.5)';
-            ctx.strokeStyle = 'rgba(0, 200, 255, 0.1)';
-
-            particles.forEach((p, index) => {
-                p.x += p.vx;
-                p.y += p.vy;
-
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                for (let j = index + 1; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if (dist < 120) {
-                        ctx.lineWidth = 1 - dist / 120;
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        ctx.stroke();
-                    }
-                }
-            });
-
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // Remove simulated alert and allow direct download from GitHub releases
-        // document.getElementById('download-btn').addEventListener('click', (e) => { ... });
-    </script>
 </body>
 </html>
