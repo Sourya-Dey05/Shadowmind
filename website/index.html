@@ -233,11 +233,8 @@
         }
         animate();
 
-        // Download Simulation alert
-        document.getElementById('download-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert("📥 ShadowMind-Setup.exe download initiated!\n\nNote for GitHub/Vercel hosting: Make sure to attach the compiled PyInstaller .exe release asset to your GitHub repository releases page for direct binary downloading.");
-        });
+        // Remove simulated alert and allow direct download from GitHub releases
+        // document.getElementById('download-btn').addEventListener('click', (e) => { ... });
     </script>
 </body>
 </html>
