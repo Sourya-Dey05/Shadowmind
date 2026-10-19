@@ -108,8 +108,6 @@ class DashboardTab(ctk.CTkFrame):
             font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
             border_width=1, border_color=C_BORDER, corner_radius=6
         )
-            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
-        )
         self.log_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
         self._append_log("ShadowMind started.")
         self._append_log(f"Logged in as: {self.session.username} [{self.session.role.value}]")
