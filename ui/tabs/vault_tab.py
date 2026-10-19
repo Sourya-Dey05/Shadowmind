@@ -224,6 +224,8 @@ class VaultTab(ctk.CTkFrame):
                     messagebox.showerror("Unlock Error", f"Failed to decrypt file:\n{e}")
             else:
                 messagebox.showerror("Error", f"Encrypted file not found in /Vault folder: {filename}")
+
+    def _workspace_delete_file(self):
         filename = simpledialog.askstring("Delete File", "Enter exact filename to delete:")
         if filename:
             path = self.workspace.vault_dir / filename
