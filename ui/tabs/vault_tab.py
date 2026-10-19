@@ -19,7 +19,7 @@ from src.vault.aes_vault import AESVault
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.ttl_destruct import zero_wipe_ram_key
 from src.vault.session_state import SessionState
-from src.workspace.workspace_vault import ActiveWorkspaceVault
+from src.workspace.workspace_vault import LocalStorageVault
 
 C_BG      = "#0d0f14"
 C_PANEL   = "#13161e"
@@ -41,7 +41,7 @@ class VaultTab(ctk.CTkFrame):
         self.session = session
         
         self.vault = AESVault(SessionState.get_key())
-        self.workspace = ActiveWorkspaceVault()
+        self.workspace = LocalStorageVault()
         self.protected_files = []
 
         self._build()
