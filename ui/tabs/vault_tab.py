@@ -60,72 +60,85 @@ class VaultTab(ctk.CTkFrame):
         # =====================================================================
         # COLUMN 0: Active Workspace Vault (Plaintext, Auto-Locking)
         # =====================================================================
-        ws_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        ws_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         ws_frame.grid(row=0, column=0, padx=(12, 6), pady=12, sticky="nsew")
         ws_frame.grid_rowconfigure(1, weight=1)
         ws_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             ws_frame, text="Active Workspace (/Vault Folder)",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(14, 4))
 
         self.ws_box = ctk.CTkTextbox(
-            ws_frame, fg_color="#0a0c10", text_color=C_TEXT,
-            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
+            ws_frame, fg_color="#05070a", text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
+            border_width=1, border_color=C_BORDER, corner_radius=6
         )
-        self.ws_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
+        self.ws_box.grid(row=1, column=0, padx=12, pady=(0, 10), sticky="nsew")
 
-        ctk.CTkButton(
+        self.decrypt_btn = ctk.CTkButton(
             ws_frame, text="🔓 Unlock / Decrypt Vault File",
             command=self._workspace_decrypt_file,
-            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            corner_radius=8
-        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+            fg_color=C_ACCENT, hover_color="#38d4ff", text_color="#07080e",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+            corner_radius=6, height=36
+        )
+        self.decrypt_btn.grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+        CyberAnimator.apply_button_hover(self.decrypt_btn, C_ACCENT, "#38d4ff")
 
         ctk.CTkLabel(
             ws_frame,
-            text="💡 Create/edit files in Windows /Vault folder.\nAuto-encrypts on attack.\nDecrypt them here when needed.",
-            font=ctk.CTkFont(size=10), text_color=C_SUBTEXT, justify="center"
+            text="💡 Normal files in /Vault folder auto-encrypt into .enc on attack.\nDecrypt them here back to plaintext.",
+            font=ctk.CTkFont(family=FONT_BODY, size=10), text_color=C_SUBTEXT, justify="center"
         ).grid(row=3, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # =====================================================================
         # COLUMN 1: Static Poison Pill Vault (Encrypted Storage)
         # =====================================================================
-        files_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        files_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         files_frame.grid(row=0, column=1, padx=6, pady=12, sticky="nsew")
         files_frame.grid_rowconfigure(1, weight=1)
         files_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            files_frame, text="Secure Vault (AES-256)",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            files_frame, text="Secure Vault (AES-256 Storage)",
+            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(14, 4))
 
         self.files_box = ctk.CTkTextbox(
-            files_frame, fg_color="#0a0c10", text_color=C_TEXT,
-            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
+            files_frame, fg_color="#05070a", text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
+            border_width=1, border_color=C_BORDER, corner_radius=6
         )
-        self.files_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
+        self.files_box.grid(row=1, column=0, padx=12, pady=(0, 10), sticky="nsew")
 
-        ctk.CTkButton(
+        add_file_btn = ctk.CTkButton(
             files_frame, text="+ Add File to Vault",
             command=self._add_file_to_vault,
-            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            corner_radius=8
-        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+            fg_color=C_SURFACE, hover_color=C_BORDER, text_color=C_ACCENT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+            border_width=1, border_color=C_BORDER,
+            corner_radius=6, height=36
+        )
+        add_file_btn.grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
+        CyberAnimator.apply_button_hover(add_file_btn, C_SURFACE, C_BORDER)
 
-        ctk.CTkButton(
-            files_frame, text="🔓 Decrypt / Unlock File",
+        unlock_file_btn = ctk.CTkButton(
+            files_frame, text="🔓 Decrypt Static Vault File",
             command=self._decrypt_file_from_vault,
-            fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
-            corner_radius=8
-        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
+            fg_color=C_SURFACE, hover_color=C_BORDER, text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11),
+            border_width=1, border_color=C_BORDER,
+            corner_radius=6, height=32
+        )
+        unlock_file_btn.grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
+        CyberAnimator.apply_button_hover(unlock_file_btn, C_SURFACE, C_BORDER)
 
         warning_lbl = ctk.CTkLabel(
             files_frame,
-            text="⚠️ RAM-only keys.\nDecrypt before logout!",
-            font=ctk.CTkFont(size=10), text_color=C_WARNING, justify="center"
+            text="⚠️ RAM-only keys.\nDecrypt files before session logout or shutdown!",
+            font=ctk.CTkFont(family=FONT_BODY, size=10), text_color=C_WARNING, justify="center"
         )
         warning_lbl.grid(row=4, column=0, padx=12, pady=(0, 12), sticky="ew")
 
@@ -137,59 +150,86 @@ class VaultTab(ctk.CTkFrame):
         right.grid_columnconfigure(0, weight=1)
 
         # Key status card
-        key_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        key_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         key_card.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         key_card.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(key_card, text="Session Key Status",
-                     font=ctk.CTkFont(size=14, weight="bold"),
+        ctk.CTkLabel(key_card, text="SESSION KEY STATUS",
+                     font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
                      text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
-        ctk.CTkLabel(key_card, text="Status:",
-                     font=ctk.CTkFont(size=11), text_color=C_SUBTEXT).grid(
+
+        ctk.CTkLabel(key_card, text="STATUS:",
+                     font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"), text_color=C_SUBTEXT).grid(
             row=1, column=0, sticky="w", padx=16)
         
-        self.key_status_lbl = ctk.CTkLabel(key_card, text="ACTIVE (RAM Secured)",
-                                           font=ctk.CTkFont(size=13, weight="bold"),
+        self.key_status_lbl = ctk.CTkLabel(key_card, text="ACTIVE (RAM SECURED)",
+                                           font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
                                            text_color=C_SUCCESS)
         self.key_status_lbl.grid(row=2, column=0, sticky="w", padx=16, pady=(0, 4))
 
-        ctk.CTkButton(
+        ctk.CTkLabel(key_card, text="ALGORITHM:",
+                     font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"), text_color=C_SUBTEXT).grid(
+            row=3, column=0, sticky="w", padx=16)
+        ctk.CTkLabel(key_card, text="AES-256 (Fernet / CBC + HMAC)",
+                     font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_TEXT).grid(
+            row=4, column=0, sticky="w", padx=16, pady=(0, 4))
+
+        ctk.CTkLabel(key_card, text="KEY RESIDENCY:",
+                     font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"), text_color=C_SUBTEXT).grid(
+            row=5, column=0, sticky="w", padx=16)
+        ctk.CTkLabel(key_card, text="RAM Only · Never on Disk",
+                     font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_TEXT).grid(
+            row=6, column=0, sticky="w", padx=16, pady=(0, 8))
+
+        view_key_btn = ctk.CTkButton(
             key_card, text="🔍 View Active Key (RAM)",
             command=self._show_active_key,
-            fg_color="#1f2430", hover_color="#2b3140", text_color=C_ACCENT,
-            font=ctk.CTkFont(size=11), corner_radius=6, height=28
-        ).grid(row=3, column=0, padx=16, pady=(0, 12), sticky="ew")
+            fg_color=C_SURFACE, hover_color=C_BORDER, text_color=C_ACCENT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11), corner_radius=6, height=28,
+            border_width=1, border_color=C_BORDER
+        )
+        view_key_btn.grid(row=7, column=0, padx=16, pady=(0, 12), sticky="ew")
+        CyberAnimator.apply_button_hover(view_key_btn, C_SURFACE, C_BORDER)
 
         # TTL countdown card
-        ttl_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        ttl_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         ttl_card.grid(row=1, column=0, sticky="ew", pady=(0, 10))
         ttl_card.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(ttl_card, text="TTL Self-Destruct Engine",
-                     font=ctk.CTkFont(size=14, weight="bold"),
+        ctk.CTkLabel(ttl_card, text="TTL SELF-DESTRUCT ENGINE",
+                     font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
                      text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
-        self.ttl_status_lbl = ctk.CTkLabel(ttl_card, text="Status: Armed & Active",
-                                           font=ctk.CTkFont(size=12, weight="bold"),
-                                           text_color=C_ACCENT)
-        self.ttl_status_lbl.grid(row=1, column=0, sticky="w", padx=16, pady=(0, 12))
+        ctk.CTkLabel(ttl_card, text="Zero-wipes session key from RAM on expiry",
+                     font=ctk.CTkFont(family=FONT_BODY, size=10), text_color=C_SUBTEXT).grid(
+            row=1, column=0, sticky="w", padx=16, pady=(0, 4))
+        
+        self.ttl_status_lbl = ctk.CTkLabel(ttl_card, text="STATUS: ARMED & ACTIVE ●",
+                                           font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+                                           text_color=C_SUCCESS)
+        self.ttl_status_lbl.grid(row=2, column=0, sticky="w", padx=16, pady=(0, 12))
 
         # Emergency rotation card
-        rot_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10)
+        rot_card = ctk.CTkFrame(right, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         rot_card.grid(row=2, column=0, sticky="ew")
         rot_card.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(rot_card, text="Emergency Key Rotation",
-                     font=ctk.CTkFont(size=14, weight="bold"),
+        ctk.CTkLabel(rot_card, text="EMERGENCY KEY ROTATION",
+                     font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
                      text_color=C_TEXT).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        ctk.CTkLabel(rot_card,
+                     text="Re-encrypts all vault files with a new\nkey in < 50 ms. Stolen data\nbecomes permanently unreadable.",
+                     font=ctk.CTkFont(family=FONT_BODY, size=10), text_color=C_SUBTEXT,
+                     justify="left").grid(row=1, column=0, sticky="w", padx=16, pady=(0, 8))
         
         self.rotate_btn = ctk.CTkButton(
             rot_card, text="ROTATE KEY NOW",
             command=self._trigger_emergency_rotation,
-            fg_color=C_DANGER, hover_color="#cc0000",
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8
+            fg_color=C_DANGER, hover_color="#e62e2e",
+            font=ctk.CTkFont(family=FONT_MONO, size=12, weight="bold"),
+            corner_radius=6, height=36
         )
-        self.rotate_btn.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="ew")
+        self.rotate_btn.grid(row=2, column=0, padx=12, pady=(0, 12), sticky="ew")
+        CyberAnimator.apply_button_hover(self.rotate_btn, C_DANGER, "#e62e2e")
 
     # --- Workspace Handlers ---
     def _workspace_decrypt_file(self):

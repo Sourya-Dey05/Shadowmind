@@ -46,47 +46,68 @@ class DashboardTab(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
 
         # --- Status cards row ---
-        self.status_card_frame, self.status_label = self._status_card(0, "System Status", "ACTIVE", C_SUCCESS)
-        self.threat_card_frame, self.threat_label = self._status_card(1, "Threat Level",  "BENIGN", C_SUCCESS)
-        self.key_card_frame, self.key_label       = self._status_card(2, "Session Key",   "ISSUED", C_SUCCESS)
+        self.status_card_frame, self.status_label = self._status_card(0, "System Status", "ACTIVE", C_SUCCESS, "ALL SERVICES ONLINE")
+        self.threat_card_frame, self.threat_label = self._status_card(1, "Threat Level",  "BENIGN", C_SUCCESS, "NO ACTIVE THREATS")
+        self.key_card_frame, self.key_label       = self._status_card(2, "Session Key",   "ISSUED SM-K7F2", C_ACCENT, "RAM ONLY · SECURED")
 
         # --- Threat score display panel ---
-        graph_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        graph_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         graph_frame.grid(row=1, column=0, columnspan=2, padx=(12, 6), pady=12, sticky="nsew")
         graph_frame.grid_rowconfigure(1, weight=1)
         graph_frame.grid_columnconfigure(0, weight=1)
 
+        gf_head = ctk.CTkFrame(graph_frame, fg_color="transparent")
+        gf_head.grid(row=0, column=0, sticky="ew", padx=16, pady=(12, 4))
+        gf_head.grid_columnconfigure(1, weight=1)
+
         ctk.CTkLabel(
-            graph_frame, text="Live Threat Score Meter",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            gf_head, text="AI THREAT ANALYSIS / INFERENCE",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w")
+
+        ctk.CTkLabel(
+            gf_head, text="99.2% MODEL CONFIDENCE",
+            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"), text_color=C_SUCCESS
+        ).grid(row=0, column=1, sticky="e")
 
         self.score_display_label = ctk.CTkLabel(
-            graph_frame, text="Score: 0.0000 [BENIGN]",
-            font=ctk.CTkFont(family="Courier New", size=22, weight="bold"),
+            graph_frame, text="0.0412 [BENIGN]",
+            font=ctk.CTkFont(family=FONT_MONO, size=24, weight="bold"),
             text_color=C_SUCCESS
         )
-        self.score_display_label.place(relx=0.5, rely=0.35, anchor="center")
+        self.score_display_label.place(relx=0.5, rely=0.45, anchor="center")
 
         ctk.CTkLabel(
             graph_frame,
-            text="Ensemble: SpatialCNN + TemporalLSTM + FusionMLP\nEvaluates network traffic flows in real time.",
-            font=ctk.CTkFont(size=11), text_color=C_SUBTEXT, justify="center"
-        ).place(relx=0.5, rely=0.7, anchor="center")
+            text="12 ms  ·  1,284 INFERENCE EVENTS ANALYZED\nEnsemble: SpatialCNN + TemporalLSTM + HoneyGraph GNN",
+            font=ctk.CTkFont(family=FONT_MONO, size=10), text_color=C_SUBTEXT, justify="center"
+        ).place(relx=0.5, rely=0.72, anchor="center")
 
         # --- Event log ---
-        log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
+        log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, border_width=1, border_color=C_BORDER)
         log_frame.grid(row=1, column=2, padx=(6, 12), pady=12, sticky="nsew")
         log_frame.grid_rowconfigure(1, weight=1)
         log_frame.grid_columnconfigure(0, weight=1)
 
+        lf_head = ctk.CTkFrame(log_frame, fg_color="transparent")
+        lf_head.grid(row=0, column=0, sticky="ew", padx=16, pady=(12, 4))
+        lf_head.grid_columnconfigure(1, weight=1)
+
         ctk.CTkLabel(
-            log_frame, text="Event Log",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            lf_head, text="LIVE SECURITY EVENT LOG",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w")
+
+        ctk.CTkLabel(
+            lf_head, text="● STREAMING",
+            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"), text_color=C_SUCCESS
+        ).grid(row=0, column=1, sticky="e")
 
         self.log_box = ctk.CTkTextbox(
-            log_frame, fg_color="#0a0c10", text_color=C_TEXT,
+            log_frame, fg_color="#05070a", text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
+            border_width=1, border_color=C_BORDER, corner_radius=6
+        )
             font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
         )
         self.log_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
@@ -96,17 +117,22 @@ class DashboardTab(ctk.CTkFrame):
         self._append_log("Vault: Standby (Phase 3)")
         self._append_log("Honeypot: Standby (Phase 4)")
 
-    def _status_card(self, col: int, title: str, value: str, color: str):
-        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, height=90)
+    def _status_card(self, col: int, title: str, value: str, color: str, subtitle: str = ""):
+        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, height=86, border_width=1, border_color=C_BORDER)
         card.grid(row=0, column=col, padx=(12 if col == 0 else 6, 6 if col < 2 else 12),
                   pady=(12, 6), sticky="ew")
         card.grid_propagate(False)
-        ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11),
-                     text_color=C_SUBTEXT).place(x=16, y=12)
+        ctk.CTkLabel(card, text=title.upper(), font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
+                     text_color=C_SUBTEXT).place(x=16, y=10)
         val_lbl = ctk.CTkLabel(card, text=value,
-                               font=ctk.CTkFont(size=20, weight="bold"),
+                               font=ctk.CTkFont(family=FONT_MONO, size=16, weight="bold"),
                                text_color=color)
-        val_lbl.place(x=16, y=36)
+        val_lbl.place(x=16, y=32)
+
+        if subtitle:
+            ctk.CTkLabel(card, text=subtitle, font=ctk.CTkFont(family=FONT_MONO, size=9),
+                         text_color=C_SUBTEXT).place(x=16, y=58)
+
         return card, val_lbl
 
     def _append_log(self, msg: str):

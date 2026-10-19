@@ -29,7 +29,8 @@ COLOR_TEXT_SECONDARY = "#94a3b8"  # Subtitles, labels, descriptions
 COLOR_TEXT_MUTED     = "#55647a"  # Timestamps, metadata, subtle hints
 COLOR_TEXT_DIM       = "#3b4759"  # Borders & decorative marks
 
-# Fonts
-FONT_BRAND  = "Courier New"
+# Fonts - Clean, high-readability Windows native fonts matching Figma
+FONT_TITLE  = "Segoe UI"
 FONT_BODY   = "Segoe UI"
-FONT_MONO   = "Courier New"
+FONT_MONO   = "Consolas"
+FONT_BRAND  = "Segoe UI"

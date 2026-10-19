@@ -64,57 +64,132 @@ class LoginFrame(ctk.CTkFrame):
     def _build(self):
         self.grid_columnconfigure(0, weight=1)
 
+        # Top status banner matching Figma Screen 1
+        top_banner = ctk.CTkFrame(self, fg_color=C_SURFACE, height=34, corner_radius=0)
+        top_banner.grid(row=0, column=0, sticky="ew")
+        top_banner.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            top_banner,
+            text="SHADOWMIND / v2.4.0  SECURE ACCESS TERMINAL / SM-01",
+            font=ctk.CTkFont(family=FONT_MONO, size=10),
+            text_color=C_SUBTEXT
+        ).grid(row=0, column=0, padx=16, pady=6, sticky="w")
+
+        ctk.CTkLabel(
+            top_banner,
+            text="● ENCLAVE READY   VERIFIED · SHA-256",
+            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
+            text_color=C_SUCCESS
+        ).grid(row=0, column=2, padx=16, pady=6, sticky="e")
+
+        # Subtitle trust tag
+        ctk.CTkLabel(
+            self,
+            text="TRUST BOUNDARY / LOCAL KERNEL INTEGRITY",
+            font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"),
+            text_color=C_SUBTEXT
+        ).grid(row=1, column=0, pady=(20, 0))
+
         # Logo / title
         ctk.CTkLabel(
             self, text="SHADOWMIND",
-            font=ctk.CTkFont(family="Courier New", size=36, weight="bold"),
-            text_color=C_ACCENT
-        ).grid(row=0, column=0, pady=(60, 4))
+            font=ctk.CTkFont(family=FONT_TITLE, size=40, weight="bold"),
+            text_color=C_TEXT
+        ).grid(row=2, column=0, pady=(6, 2))
 
         ctk.CTkLabel(
-            self, text="Self-Destructing AI Defense System",
-            font=ctk.CTkFont(size=13),
+            self, text="Self - Destructing AI Defense System",
+            font=ctk.CTkFont(family=FONT_BODY, size=13),
             text_color=C_SUBTEXT
-        ).grid(row=1, column=0, pady=(0, 40))
+        ).grid(row=3, column=0, pady=(0, 20))
 
-        # Login card
-        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=12, width=360)
-        card.grid(row=2, column=0, padx=40, pady=10, sticky="n")
+        # Login card matching Figma
+        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=12, width=380, border_width=1, border_color=C_BORDER)
+        card.grid(row=4, column=0, padx=40, pady=0, sticky="n")
         card.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(card, text="Sign In", font=ctk.CTkFont(size=18, weight="bold"),
-                     text_color=C_TEXT).grid(row=0, column=0, pady=(24, 16))
+        ctk.CTkLabel(
+            card, text="OPERATOR AUTHENTICATION",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+            text_color=C_TEXT
+        ).grid(row=0, column=0, pady=(22, 14))
 
-        self.username_var = ctk.StringVar()
+        self.username_var = ctk.StringVar(value="admin")
         self.password_var = ctk.StringVar()
 
-        ctk.CTkLabel(card, text="Username", text_color=C_SUBTEXT,
-                     font=ctk.CTkFont(size=12)).grid(row=1, column=0, sticky="w", padx=24)
-        ctk.CTkEntry(
+        ctk.CTkLabel(
+            card, text="USERNAME", text_color=C_SUBTEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold")
+        ).grid(row=1, column=0, sticky="w", padx=28)
+        self.user_entry = ctk.CTkEntry(
             card, textvariable=self.username_var, placeholder_text="Enter username",
-            width=312, height=38, corner_radius=8
-        ).grid(row=2, column=0, padx=24, pady=(2, 12))
+            width=324, height=38, corner_radius=6,
+            fg_color=C_SURFACE, border_color=C_BORDER, text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=12)
+        )
+        self.user_entry.grid(row=2, column=0, padx=28, pady=(2, 12))
 
-        ctk.CTkLabel(card, text="Password", text_color=C_SUBTEXT,
-                     font=ctk.CTkFont(size=12)).grid(row=3, column=0, sticky="w", padx=24)
+        ctk.CTkLabel(
+            card, text="PASSWORD", text_color=C_SUBTEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold")
+        ).grid(row=3, column=0, sticky="w", padx=28)
         self.pw_entry = ctk.CTkEntry(
             card, textvariable=self.password_var, placeholder_text="Enter password",
-            show="*", width=312, height=38, corner_radius=8
+            show="•", width=324, height=38, corner_radius=6,
+            fg_color=C_SURFACE, border_color=C_BORDER, text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=14)
         )
-        self.pw_entry.grid(row=4, column=0, padx=24, pady=(2, 8))
+        self.pw_entry.grid(row=4, column=0, padx=28, pady=(2, 6))
 
-        self.error_label = ctk.CTkLabel(card, text="", text_color=C_DANGER,
-                                        font=ctk.CTkFont(size=11))
+        self.error_label = ctk.CTkLabel(
+            card, text="", text_color=C_DANGER,
+            font=ctk.CTkFont(family=FONT_MONO, size=10)
+        )
         self.error_label.grid(row=5, column=0, pady=(0, 4))
 
         self.login_btn = ctk.CTkButton(
             card, text="INITIALIZE SECURE SESSION", command=self._attempt_login,
-            width=312, height=44, corner_radius=8,
-            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            font=ctk.CTkFont(family="Courier New", size=13, weight="bold")
+            width=324, height=42, corner_radius=6,
+            fg_color=C_ACCENT, hover_color="#38d4ff", text_color="#07080e",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold")
         )
-        self.login_btn.grid(row=6, column=0, padx=24, pady=(4, 24))
-        CyberAnimator.apply_glow_effect(self.login_btn, C_ACCENT, "#33d6ff", C_ACCENT)
+        self.login_btn.grid(row=6, column=0, padx=28, pady=(4, 12))
+        CyberAnimator.apply_button_hover(self.login_btn, C_ACCENT, "#38d4ff")
+
+        ctk.CTkLabel(
+            card,
+            text="RAM-ONLY KEYS · AUTO-PURGE ON EXIT",
+            font=ctk.CTkFont(family=FONT_MONO, size=9),
+            text_color=C_SUBTEXT
+        ).grid(row=7, column=0, pady=(0, 16))
+
+        # Bottom guidance
+        ctk.CTkLabel(
+            self,
+            text="Restricted to authorized personnel. All access attempts are logged and\ncontinuously monitored.",
+            font=ctk.CTkFont(family=FONT_BODY, size=11),
+            text_color=C_SUBTEXT, justify="center"
+        ).grid(row=5, column=0, pady=(16, 0))
+
+        # Bottom bar
+        bot_banner = ctk.CTkFrame(self, fg_color=C_SURFACE, height=32, corner_radius=0)
+        bot_banner.grid(row=6, column=0, sticky="ew", pady=(24, 0))
+        bot_banner.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            bot_banner,
+            text="AES-256 ENCRYPTION   ZERO-TRUST RUNTIME   EPHEMERAL BY DESIGN",
+            font=ctk.CTkFont(family=FONT_MONO, size=9),
+            text_color=C_SUBTEXT
+        ).grid(row=0, column=0, padx=16, pady=6, sticky="w")
+
+        ctk.CTkLabel(
+            bot_banner,
+            text="SHADOWMIND OS 2.4.0 / BUILD 24.10.19",
+            font=ctk.CTkFont(family=FONT_MONO, size=9),
+            text_color=C_SUBTEXT
+        ).grid(row=0, column=2, padx=16, pady=6, sticky="e")
 
         # Bind Enter key
         self.pw_entry.bind("<Return>", lambda e: self._attempt_login())
@@ -194,14 +269,20 @@ class ShadowMindApp(ctk.CTk):
         loading_frame.pack(fill="both", expand=True)
         
         ctk.CTkLabel(
-            loading_frame, text="ESTABLISHING SECURE ZERO-TRUST TUNNEL...",
-            font=ctk.CTkFont(family="Courier New", size=16, weight="bold"),
+            loading_frame, text="● ESTABLISHING SECURE ZERO-TRUST TUNNEL...",
+            font=ctk.CTkFont(family=FONT_MONO, size=15, weight="bold"),
             text_color=C_ACCENT
-        ).place(relx=0.5, rely=0.5, anchor="center")
+        ).place(relx=0.5, rely=0.48, anchor="center")
+
+        ctk.CTkLabel(
+            loading_frame, text="ALLOCATING RAM ENCLAVE · VALIDATING LOCAL INTEGRITY",
+            font=ctk.CTkFont(family=FONT_MONO, size=10),
+            text_color=C_SUBTEXT
+        ).place(relx=0.5, rely=0.53, anchor="center")
         
         self.update()
         import time
-        time.sleep(0.6)  # High quality cinematic transition delay
+        time.sleep(0.4)
         
         self._build_main_ui()
         self._start_ttl_watcher()
@@ -211,44 +292,77 @@ class ShadowMindApp(ctk.CTk):
         for w in self.winfo_children():
             w.destroy()
 
-        # Top bar
-        topbar = ctk.CTkFrame(self, fg_color=C_SURFACE, height=48, corner_radius=0)
+        # Top bar with Figma header aesthetics
+        topbar = ctk.CTkFrame(self, fg_color=C_SURFACE, height=50, corner_radius=0, border_width=1, border_color=C_BORDER)
         topbar.pack(fill="x", side="top")
         topbar.pack_propagate(False)
 
+        brand_frame = ctk.CTkFrame(topbar, fg_color="transparent")
+        brand_frame.pack(side="left", padx=16)
+
         ctk.CTkLabel(
-            topbar, text="  SHADOWMIND / v2.4.0",
-            font=ctk.CTkFont(family=FONT_BRAND, size=16, weight="bold"),
+            brand_frame, text="SHADOWMIND",
+            font=ctk.CTkFont(family=FONT_TITLE, size=16, weight="bold"),
             text_color=C_TEXT
-        ).pack(side="left", padx=12)
+        ).pack(side="left")
 
-        # Session info + TTL
+        ctk.CTkLabel(
+            brand_frame, text=" / v2.4.0",
+            font=ctk.CTkFont(family=FONT_MONO, size=11),
+            text_color=C_SUBTEXT
+        ).pack(side="left", padx=(2, 0))
+
+        # Right side info container
+        right_info = ctk.CTkFrame(topbar, fg_color="transparent")
+        right_info.pack(side="right", padx=16)
+
+        # Operator pill
+        pill = ctk.CTkFrame(right_info, fg_color=C_PANEL, corner_radius=6, border_width=1, border_color=C_BORDER)
+        pill.pack(side="left", padx=(0, 12))
+
+        ctk.CTkLabel(
+            pill, text="AD",
+            font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
+            fg_color=C_ACCENT, text_color="#07080e",
+            corner_radius=4, width=22, height=22
+        ).pack(side="left", padx=6, pady=4)
+
+        ctk.CTkLabel(
+            pill,
+            text=f"{self.session.username} [{self.session.role.value.upper()}]",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+            text_color=C_TEXT
+        ).pack(side="left", padx=(2, 8))
+
         self.ttl_label = ctk.CTkLabel(
-            topbar, text="", font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_SUBTEXT
+            pill, text="", font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_SUBTEXT
         )
-        self.ttl_label.pack(side="right", padx=16)
+        self.ttl_label.pack(side="left", padx=(0, 10))
 
-        self.user_label = ctk.CTkLabel(
-            topbar,
-            text=f"  {self.session.username} [{self.session.role.value.upper()}]",
-            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_ACCENT
-        )
-        self.user_label.pack(side="right", padx=4)
+        ctk.CTkLabel(
+            right_info,
+            text="LOCAL NODE / SM-01",
+            font=ctk.CTkFont(family=FONT_MONO, size=10),
+            text_color=C_SUBTEXT
+        ).pack(side="left", padx=(0, 12))
 
-        ctk.CTkButton(
-            topbar, text="LOGOUT", command=self._logout,
-            width=76, height=28, fg_color="#2b1418", hover_color=C_DANGER,
+        logout_btn = ctk.CTkButton(
+            right_info, text="LOGOUT", command=self._logout,
+            width=72, height=28, fg_color="#2b1418", hover_color=C_DANGER,
             text_color=C_DANGER, font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
             corner_radius=4
-        ).pack(side="right", padx=8)
+        )
+        logout_btn.pack(side="left")
+        CyberAnimator.apply_button_hover(logout_btn, "#2b1418", C_DANGER, C_DANGER, "#ffffff")
 
         # Tab view with Figma border & surface styling
         self.tabs = ctk.CTkTabview(self, fg_color=C_BG, segmented_button_fg_color=C_SURFACE,
-                                   segmented_button_selected_color=C_ACCENT,
-                                   segmented_button_selected_hover_color="#38d4ff",
-                                   segmented_button_unselected_color=C_SURFACE,
-                                   segmented_button_unselected_hover_color=C_PANEL,
-                                   text_color="#07080e")
+                                   segmented_button_selected_color=C_PANEL,
+                                   segmented_button_selected_hover_color=C_PANEL,
+                                   segmented_button_unselected_color="transparent",
+                                   segmented_button_unselected_hover_color=C_SURFACE,
+                                   text_color=C_TEXT,
+                                   text_color_disabled=C_SUBTEXT)
         self.tabs.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tabs.add("Dashboard")
