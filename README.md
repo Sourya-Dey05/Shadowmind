@@ -319,7 +319,7 @@ From deck page 12:
 
 ## Team & Credits
 
-- **Author (deck):** Sourya Dey — **Group GRP-45**
+- **Author (deck):** Sourya Dey , Soham Mukherjee , Ditipriya Laha , Rachit Bhattacherjee and Muhammad Ahmed — **Group GRP-45**
 - **Created:** 2026-09-09 15:38 UTC (Canva)
 - **Source files:** `D:\SHADOWMIND_GRP-45.pdf` and `D:\ShadowMind.pptx` (12 slides)
 
