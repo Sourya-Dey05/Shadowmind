@@ -61,7 +61,7 @@ class VaultTab(ctk.CTkFrame):
         ws_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            ws_frame, text="Active Workspace (Plaintext)",
+            ws_frame, text="Active Workspace (/Vault Folder)",
             font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
@@ -72,31 +72,17 @@ class VaultTab(ctk.CTkFrame):
         self.ws_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
 
         ctk.CTkButton(
-            ws_frame, text="+ Create / Edit File",
-            command=self._workspace_create_file,
-            fg_color=C_SUCCESS, hover_color="#00994d", text_color="#000000",
-            corner_radius=8
-        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
-
-        ctk.CTkButton(
-            ws_frame, text="🔓 Unlock / Decrypt Vault",
+            ws_frame, text="🔓 Unlock / Decrypt Vault File",
             command=self._workspace_decrypt_file,
             fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
             corner_radius=8
-        ).grid(row=3, column=0, padx=12, pady=(0, 6), sticky="ew")
-
-        ctk.CTkButton(
-            ws_frame, text="🗑️ Delete File",
-            command=self._workspace_delete_file,
-            fg_color="#333842", hover_color="#444a56", text_color=C_TEXT,
-            corner_radius=8
-        ).grid(row=4, column=0, padx=12, pady=(0, 6), sticky="ew")
+        ).grid(row=2, column=0, padx=12, pady=(0, 6), sticky="ew")
 
         ctk.CTkLabel(
             ws_frame,
-            text="💡 Normal daily files.\nAuto-encrypts instantly on breach!",
+            text="💡 Create/edit files in Windows /Vault folder.\nAuto-encrypts on attack.\nDecrypt them here when needed.",
             font=ctk.CTkFont(size=10), text_color=C_SUBTEXT, justify="center"
-        ).grid(row=5, column=0, padx=12, pady=(0, 12), sticky="ew")
+        ).grid(row=3, column=0, padx=12, pady=(0, 12), sticky="ew")
 
         # =====================================================================
         # COLUMN 1: Static Poison Pill Vault (Encrypted Storage)
@@ -201,16 +187,6 @@ class VaultTab(ctk.CTkFrame):
         self.rotate_btn.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="ew")
 
     # --- Workspace Handlers ---
-    def _workspace_create_file(self):
-        filename = simpledialog.askstring("Vault Folder", "Enter filename (e.g. secret.txt):")
-        if filename:
-            content = simpledialog.askstring("File Content", "Enter plaintext content:")
-            if content is not None:
-                path = self.workspace.vault_dir / filename
-                path.write_text(content, encoding="utf-8")
-                self._refresh_workspace_display()
-                messagebox.showinfo("Vault Folder", f"File created in physical /Vault folder:\n{filename}")
-
     def _workspace_decrypt_file(self):
         filename = simpledialog.askstring("Decrypt Vault File", "Enter exact encrypted filename (e.g. secret.txt.enc):")
         if filename:
@@ -224,17 +200,6 @@ class VaultTab(ctk.CTkFrame):
                     messagebox.showerror("Unlock Error", f"Failed to decrypt file:\n{e}")
             else:
                 messagebox.showerror("Error", f"Encrypted file not found in /Vault folder: {filename}")
-
-    def _workspace_delete_file(self):
-        filename = simpledialog.askstring("Delete File", "Enter exact filename to delete:")
-        if filename:
-            path = self.workspace.vault_dir / filename
-            if path.exists():
-                path.unlink()
-                self._refresh_workspace_display()
-                messagebox.showinfo("Vault Folder", f"File deleted from /Vault:\n{filename}")
-            else:
-                messagebox.showerror("Error", f"File not found in /Vault folder: {filename}")
 
     def _refresh_workspace_display(self):
         files = self.workspace.list_files()
