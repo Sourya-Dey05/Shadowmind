@@ -23,8 +23,7 @@ from src.detection.engine import DetectionEngine
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.session_state import SessionState
 from src.vault.ttl_destruct import zero_wipe_ram_key
-from src.honeypot.redirector import HoneypotRedirector
-from src.honeypot.decoy_manager import DecoyManager
+from src.workspace.workspace_vault import ActiveWorkspaceVault
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -87,6 +86,12 @@ class PipelineOrchestrator:
             # Action 1: Deception
             redir_entry = self.redirector.handle_redirect(source_ip, requested_resource)
             response_actions.append(f"HONEYPOT_REDIRECT: {redir_entry}")
+
+            # Action 1.5: Active Workspace Auto-Lockdown (Encrypt all plaintext files instantly!)
+            workspace = ActiveWorkspaceVault()
+            locked_count = workspace.auto_lockdown()
+            if locked_count > 0:
+                response_actions.append(f"WORKSPACE_AUTO_LOCKED: {locked_count} active workspace files encrypted into ciphertext")
 
             # Action 2: Poison Pill Emergency Key Rotation
             protected_files = list(self.vault_dir.glob("*.*"))
