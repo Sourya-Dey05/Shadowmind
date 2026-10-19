@@ -356,13 +356,13 @@ class ShadowMindApp(ctk.CTk):
         CyberAnimator.apply_button_hover(logout_btn, "#2b1418", C_DANGER, C_DANGER, "#ffffff")
 
         # Tab view with Figma border & surface styling
-        self.tabs = ctk.CTkTabview(self, fg_color=C_BG, segmented_button_fg_color=C_SURFACE,
+        self.tabs = ctk.CTkTabview(self, fg_color=C_BG,
+                                   segmented_button_fg_color=C_SURFACE,
                                    segmented_button_selected_color=C_PANEL,
                                    segmented_button_selected_hover_color=C_PANEL,
-                                   segmented_button_unselected_color="transparent",
+                                   segmented_button_unselected_color=C_SURFACE,
                                    segmented_button_unselected_hover_color=C_SURFACE,
-                                   text_color=C_TEXT,
-                                   text_color_disabled=C_SUBTEXT)
+                                   text_color=C_TEXT)
         self.tabs.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tabs.add("Dashboard")
