@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +27,9 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
@@ -34,21 +37,28 @@
             color: #E0E0E0;
             font-family: 'Inter', sans-serif;
         }
+
         .glow-green {
             text-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
         }
+
         .glow-box {
             box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
         }
+
         .scanline {
             position: relative;
             overflow: hidden;
         }
+
         .scanline::before {
             content: " ";
             display: block;
             position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
             background-size: 100% 4px;
             z-index: 10;
@@ -57,19 +67,23 @@
         }
     </style>
 </head>
+
 <body class="bg-darkBg text-[#E0E0E0] antialiased selection:bg-cyberCyan selection:text-black">
 
     <!-- Top Security Header / Ticker Removed -->
 
     <!-- Navigation Bar -->
-    <nav class="sticky top-0 bg-[#000000]/90 backdrop-blur-md border-b border-darkBorder z-40 px-6 lg:px-12 py-4 flex items-center justify-between">
+    <nav
+        class="sticky top-0 bg-[#000000]/90 backdrop-blur-md border-b border-darkBorder z-40 px-6 lg:px-12 py-4 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-[#0c130e] border border-cyberCyan/40 flex items-center justify-center text-cyberCyan font-bold text-xl shadow-[0_0_15px_rgba(0,255,65,0.2)]">
+            <div
+                class="w-10 h-10 rounded-lg bg-[#0c130e] border border-cyberCyan/40 flex items-center justify-center text-cyberCyan font-bold text-xl shadow-[0_0_15px_rgba(0,255,65,0.2)]">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <span class="font-mono font-bold text-lg tracking-wider text-white">SHADOW<span class="text-cyberCyan">MIND</span></span>
+            <span class="font-mono font-bold text-lg tracking-wider text-white">SHADOW<span
+                    class="text-cyberCyan">MIND</span></span>
         </div>
-        
+
         <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-[#94A3B8]">
             <a href="#features" class="hover:text-cyberCyan transition-colors">Architecture</a>
             <a href="#how-it-works" class="hover:text-cyberCyan transition-colors">Defense Loop</a>
@@ -78,11 +92,13 @@
         </div>
 
         <div class="flex items-center space-x-4">
-            <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="hidden sm:inline-flex items-center space-x-2 bg-[#181818] hover:bg-[#222] border border-darkBorder px-4 py-2 rounded-lg text-sm font-mono text-white transition-all">
+            <a href="https://github.com/Shadowmind/Shadowmind" target="_blank"
+                class="hidden sm:inline-flex items-center space-x-2 bg-[#181818] hover:bg-[#222] border border-darkBorder px-4 py-2 rounded-lg text-sm font-mono text-white transition-all">
                 <i class="fa-brands fa-github text-lg"></i>
                 <span>GitHub</span>
             </a>
-            <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-5 py-2.5 rounded-lg text-sm transition-all shadow-[0_0_20px_rgba(0,255,65,0.3)] flex items-center space-x-2">
+            <a href="/dist/ShadowMind.exe"
+                class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-5 py-2.5 rounded-lg text-sm transition-all shadow-[0_0_20px_rgba(0,255,65,0.3)] flex items-center space-x-2">
                 <i class="fa-solid fa-download"></i>
                 <span>DOWNLOAD .EXE</span>
             </a>
@@ -90,32 +106,33 @@
     </nav>
 
     <!-- Hero Section -->
-    <header class="relative px-6 lg:px-12 pt-20 pb-28 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
+    <header
+        class="relative px-6 lg:px-12 pt-20 pb-28 max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
         <div class="flex-1 text-left">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0c130e] border border-cyberCyan/30 text-cyberCyan font-mono text-xs mb-6">
-                <i class="fa-solid fa-circle-nodes"></i>
-                <span>GROUP GRP-45 • AUTHOR: SOURYA DEY</span>
-            </div>
-            
+
+
             <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 font-mono">
                 THE SELF-DESTRUCTING <br>
                 <span class="text-cyberCyan glow-green">AI DEFENSE SYSTEM</span>
             </h1>
-            
+
             <p class="text-lg text-[#94A3B8] max-w-xl mb-10 leading-relaxed">
-                An integrated zero-trust framework for low-and-slow attack detection, dynamic honeypots, and millisecond RAM key self-destruct. Built for absolute data immunity.
+                An integrated zero-trust framework for low-and-slow attack detection, dynamic honeypots, and millisecond
+                RAM key self-destruct. Built for absolute data immunity.
             </p>
-            
+
             <div class="flex flex-wrap gap-4">
-                <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-8 py-4 rounded-xl text-base transition-all shadow-[0_0_25px_rgba(0,255,65,0.4)] flex items-center space-x-3">
+                <a href="/dist/ShadowMind.exe"
+                    class="bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-8 py-4 rounded-xl text-base transition-all shadow-[0_0_25px_rgba(0,255,65,0.4)] flex items-center space-x-3">
                     <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
                     <div>
                         <div class="leading-tight">Download ShadowMind.exe</div>
                         <div class="text-xs font-normal opacity-85">Windows Standalone • v1.0.0</div>
                     </div>
                 </a>
-                
-                <a href="https://github.com/Sourya-Dey05/Shadowmind" target="_blank" class="bg-[#181818] hover:bg-[#222] border border-darkBorder px-8 py-4 rounded-xl text-base font-mono text-white transition-all flex items-center space-x-3">
+
+                <a href="https://github.com/Shadowmind/Shadowmind" target="_blank"
+                    class="bg-[#181818] hover:bg-[#222] border border-darkBorder px-8 py-4 rounded-xl text-base font-mono text-white transition-all flex items-center space-x-3">
                     <i class="fa-solid fa-code text-lg"></i>
                     <span>Source Repository</span>
                 </a>
@@ -134,7 +151,8 @@
         </div>
 
         <!-- Terminal Preview Box -->
-        <div class="w-full lg:w-[500px] bg-[#0c130e] border border-darkBorder rounded-2xl p-6 glow-box scanline shadow-2xl">
+        <div
+            class="w-full lg:w-[500px] bg-[#0c130e] border border-darkBorder rounded-2xl p-6 glow-box scanline shadow-2xl">
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-darkBorder">
                 <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 rounded-full bg-red-500"></div>
@@ -159,51 +177,64 @@
     <section id="features" class="py-24 px-6 lg:px-12 max-w-7xl mx-auto border-t border-darkBorder">
         <div class="text-center max-w-2xl mx-auto mb-16">
             <h2 class="text-3xl font-bold text-white font-mono mb-4">FOUR PILLARS OF IMMUNITY</h2>
-            <p class="text-[#94A3B8]">Engineered to defeat low-and-slow data exfiltration before enterprise damage occurs.</p>
+            <p class="text-[#94A3B8]">Engineered to defeat low-and-slow data exfiltration before enterprise damage
+                occurs.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Card 1 -->
-            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
-                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+            <div
+                class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div
+                    class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-brain"></i>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-3 font-mono">AI Detection Engine</h3>
                 <p class="text-[#94A3B8] text-sm leading-relaxed">
-                    An ensemble of 1D Spatial CNN (detecting packet spikes), Temporal LSTM (detecting periodic slow beacons), and a PyTorch Geometric HoneyGraph GNN reasoning across network topology.
+                    An ensemble of 1D Spatial CNN (detecting packet spikes), Temporal LSTM (detecting periodic slow
+                    beacons), and a PyTorch Geometric HoneyGraph GNN reasoning across network topology.
                 </p>
             </div>
 
             <!-- Card 2 -->
-            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
-                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+            <div
+                class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div
+                    class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-key"></i>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-3 font-mono">Poison Pill Vault</h3>
                 <p class="text-[#94A3B8] text-sm leading-relaxed">
-                    Holds AES-256 session keys exclusively in RAM. Upon confirmed exfiltration, emergency rotation re-encrypts all vault and local storage files in under 50ms, invalidating stolen ciphertext.
+                    Holds AES-256 session keys exclusively in RAM. Upon confirmed exfiltration, emergency rotation
+                    re-encrypts all vault and local storage files in under 50ms, invalidating stolen ciphertext.
                 </p>
             </div>
 
             <!-- Card 3 -->
-            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
-                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+            <div
+                class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div
+                    class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-spider"></i>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-3 font-mono">Dynamic Honeypot</h3>
                 <p class="text-[#94A3B8] text-sm leading-relaxed">
-                    Autonomously deploys trap files (fake AWS keys, payroll spreadsheets, database dumps), serves an interactive corporate share to attackers, and logs exact decoy interactions.
+                    Autonomously deploys trap files (fake AWS keys, payroll spreadsheets, database dumps), serves an
+                    interactive corporate share to attackers, and logs exact decoy interactions.
                 </p>
             </div>
 
             <!-- Card 4 -->
-            <div class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
-                <div class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
+            <div
+                class="bg-[#0c130e] border border-darkBorder p-8 rounded-2xl hover:border-cyberCyan/50 transition-all group">
+                <div
+                    class="w-12 h-12 rounded-xl bg-[#181818] border border-darkBorder flex items-center justify-center text-cyberCyan text-xl mb-6 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-fire-extinguisher"></i>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-3 font-mono">TTL Self-Destruct</h3>
                 <p class="text-[#94A3B8] text-sm leading-relaxed">
-                    Upon session expiry, manual logout, or process close, executes a low-level RAM zero-wipe (`memset`) across all decryption keys, guaranteeing zero residual memory footprint.
+                    Upon session expiry, manual logout, or process close, executes a low-level RAM zero-wipe (`memset`)
+                    across all decryption keys, guaranteeing zero residual memory footprint.
                 </p>
             </div>
         </div>
@@ -220,22 +251,26 @@
             <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
                 <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">01</div>
                 <h4 class="text-white font-mono font-bold mb-2">Telemetry Ingest</h4>
-                <p class="text-[#94A3B8] text-xs leading-relaxed">Monitors local physical /Vault folder, OS logs, and port 8080 cross-device streams.</p>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Monitors local physical /Vault folder, OS logs, and
+                    port 8080 cross-device streams.</p>
             </div>
             <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
                 <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">02</div>
                 <h4 class="text-white font-mono font-bold mb-2">GNN Analysis</h4>
-                <p class="text-[#94A3B8] text-xs leading-relaxed">HoneyGraph evaluates multi-hop graph edges (Device A ➔ Device B Proxy ➔ Laptop).</p>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">HoneyGraph evaluates multi-hop graph edges (Device A ➔
+                    Device B Proxy ➔ Laptop).</p>
             </div>
             <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
                 <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">03</div>
                 <h4 class="text-white font-mono font-bold mb-2">Poison Pill</h4>
-                <p class="text-[#94A3B8] text-xs leading-relaxed">Instantly auto-encrypts local Vault files and rotates AES RAM keys in &lt; 50ms.</p>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Instantly auto-encrypts local Vault files and rotates
+                    AES RAM keys in &lt; 50ms.</p>
             </div>
             <div class="bg-[#0c130e] border border-darkBorder p-6 rounded-xl relative">
                 <div class="text-cyberCyan font-mono text-2xl font-bold mb-4 opacity-50">04</div>
                 <h4 class="text-white font-mono font-bold mb-2">Deception Trap</h4>
-                <p class="text-[#94A3B8] text-xs leading-relaxed">Diverts attacker into Honeypot shared drive and logs interaction intelligence.</p>
+                <p class="text-[#94A3B8] text-xs leading-relaxed">Diverts attacker into Honeypot shared drive and logs
+                    interaction intelligence.</p>
             </div>
         </div>
     </section>
@@ -269,22 +304,27 @@
 
     <!-- Download Section -->
     <section id="download" class="py-24 px-6 lg:px-12 max-w-5xl mx-auto">
-        <div class="bg-[#0c130e] border border-cyberCyan/40 p-12 rounded-3xl text-center glow-box relative overflow-hidden">
-            <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-cyberCyan/10 rounded-full blur-3xl pointer-events-none"></div>
-            
+        <div
+            class="bg-[#0c130e] border border-cyberCyan/40 p-12 rounded-3xl text-center glow-box relative overflow-hidden">
+            <div
+                class="absolute -right-20 -bottom-20 w-64 h-64 bg-cyberCyan/10 rounded-full blur-3xl pointer-events-none">
+            </div>
+
             <h2 class="text-3xl lg:text-4xl font-bold text-white font-mono mb-4">READY TO DEPLOY SHADOWMIND?</h2>
             <p class="text-[#94A3B8] max-w-xl mx-auto mb-8 text-sm leading-relaxed">
-                Download the standalone Windows executable. Pre-packaged with AI models, AES-256 vault engine, and automated honeypot listener—no Python required.
+                Download the standalone Windows executable. Pre-packaged with AI models, AES-256 vault engine, and
+                automated honeypot listener—no Python required.
             </p>
 
-            <a href="https://github.com/Sourya-Dey05/Shadowmind/raw/main/dist/ShadowMind.exe" class="inline-flex items-center space-x-3 bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-10 py-5 rounded-2xl text-lg transition-all shadow-[0_0_30px_rgba(0,255,65,0.4)]">
+            <a href="/dist/ShadowMind.exe"
+                class="inline-flex items-center space-x-3 bg-cyberCyan hover:bg-[#00dd38] text-black font-mono font-bold px-10 py-5 rounded-2xl text-lg transition-all shadow-[0_0_30px_rgba(0,255,65,0.4)]">
                 <i class="fa-solid fa-cloud-arrow-down text-2xl"></i>
                 <div class="text-left">
                     <div class="leading-tight">Download ShadowMind.exe</div>
                     <div class="text-xs font-normal opacity-80">v1.0.0 Stable • Standalone Binary</div>
                 </div>
             </a>
-            
+
             <div class="mt-6 text-xs font-mono text-[#94A3B8]">
                 <i class="fa-solid fa-shield-check text-cyberCyan mr-1"></i> SHA-256 Verified • Direct Binary Download
             </div>
@@ -293,8 +333,9 @@
 
     <!-- Footer -->
     <footer class="border-t border-darkBorder py-8 px-6 text-center text-xs font-mono text-[#94A3B8]">
-        <p>&copy; 2026 ShadowMind Defense System (Group GRP-45 • Author: Sourya Dey). Licensed under MIT.</p>
+        <p>&copy; 2026 ShadowMind Defense System</p>
     </footer>
 
 </body>
+
 </html>
