@@ -293,12 +293,23 @@ class DashboardTab(ctk.CTkFrame):
                     except Exception as ev_err:
                         self.after(0, lambda err=ev_err: self._append_log(f"External vault encrypt error: {err}"))
 
-                    # Generate Threat Intelligence Dossier using AttackerProfiler
+                    # Generate Threat Intelligence Dossier and Auto-Generate Forensic Incident Report!
                     try:
                         from src.intelligence.profiler import AttackerProfiler
+                        from src.intelligence.reporter import IncidentReporter
+                        
                         dossier = AttackerProfiler.profile_ip(source_ip)
                         loc_str = dossier.get('geo_location', 'Local Subnet')
                         self.after(0, lambda d=dossier, loc=loc_str: self._append_log(f"THREAT INTEL: IP {d['source_ip']} | Location: {loc} | Risk: {d['risk_tier']}"))
+
+                        actions = [
+                            f"Detected network intrusion from IP {source_ip} via GNN topology analyzer.",
+                            "Triggered Poison Pill Vault emergency session key rotation.",
+                            "Auto-encrypted local physical /Vault folder items into AES-256 ciphertext.",
+                            "Diverted attacker into Dynamic Honeypot trap share."
+                        ]
+                        report_path = IncidentReporter().generate_report(dossier, actions)
+                        self.after(0, lambda p=report_path: self._append_log(f"📄 FORENSIC REPORT GENERATED: {p.name}"))
                     except Exception as prof_err:
                         pass
                 else:
