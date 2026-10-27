@@ -293,13 +293,12 @@ class DashboardTab(ctk.CTkFrame):
                     except Exception as ev_err:
                         self.after(0, lambda err=ev_err: self._append_log(f"External vault encrypt error: {err}"))
 
-                    # Automatically trigger Honeypot redirection and intel logging on attack!
+                    # Generate Threat Intelligence Dossier using AttackerProfiler
                     try:
-                        from src.honeypot.redirector import HoneypotRedirector
-                        redirector = HoneypotRedirector()
-                        redir_log = redirector.handle_redirect(source_ip, "/vault/secret_project_intel.txt")
-                        self.after(0, lambda r=redir_log: self._append_log(f"🍯 HONEYPOT: Attacker redirected to decoy trap!"))
-                    except Exception as hp_err:
+                        from src.intelligence.profiler import AttackerProfiler
+                        dossier = AttackerProfiler.profile_ip(source_ip)
+                        self.after(0, lambda d=dossier: self._append_log(f"THREAT INTEL: IP {d['source_ip']} profiled | ASN: {d['asn']} | Risk: {d['risk_tier']}"))
+                    except Exception as prof_err:
                         pass
                 else:
                     # True real-time dynamic benign score fluctuation
