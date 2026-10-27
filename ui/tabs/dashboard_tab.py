@@ -297,7 +297,8 @@ class DashboardTab(ctk.CTkFrame):
                     try:
                         from src.intelligence.profiler import AttackerProfiler
                         dossier = AttackerProfiler.profile_ip(source_ip)
-                        self.after(0, lambda d=dossier: self._append_log(f"THREAT INTEL: IP {d['source_ip']} profiled | ASN: {d['asn']} | Risk: {d['risk_tier']}"))
+                        loc_str = dossier.get('geo_location', 'Local Subnet')
+                        self.after(0, lambda d=dossier, loc=loc_str: self._append_log(f"THREAT INTEL: IP {d['source_ip']} | Location: {loc} | Risk: {d['risk_tier']}"))
                     except Exception as prof_err:
                         pass
                 else:

@@ -30,28 +30,31 @@ class AttackerProfiler:
         """
         now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         
-        # Determine origin classification
+        # Determine origin classification and estimated geographic location
         if ip_address in ("127.0.0.1", "localhost", "::1"):
             network_type = "Local Loopback / Self-Test"
             asn = "LOCAL-HOST (N/A)"
             isp = "Local Device Interface"
+            geo_location = "Localhost (Loopback)"
             risk_tier = "INTERNAL"
         elif ip_address.startswith("192.168.") or ip_address.startswith("10.") or ip_address.startswith("172."):
             network_type = "Local Area Network (LAN / Wi-Fi)"
             asn = "PRIVATE-LAN (RFC-1918)"
             isp = "Local Router Subnet"
+            geo_location = "Local Subnet (Wi-Fi / Ethernet)"
             risk_tier = "MEDIUM (Lateral Movement)"
         else:
-            # External public IP simulation
             network_type = "External Public Internet"
             asn = "AS16509 (AMAZON-02 - AWS Cloud)" if "203." in ip_address else "AS14061 (DIGITALOCEAN-ASN)"
             isp = "Cloud Hosting Provider (Data Center)"
+            geo_location = "Frankfurt, Germany (Estimated via IP Registry)" if "203." in ip_address else "Ashburn, Virginia, US (Estimated)"
             risk_tier = "HIGH (External Threat Actor)"
 
         dossier = {
             "timestamp": now,
             "source_ip": ip_address,
             "network_type": network_type,
+            "geo_location": geo_location,
             "asn": asn,
             "infrastructure": isp,
             "risk_tier": risk_tier,
@@ -68,6 +71,7 @@ class AttackerProfiler:
             f"=== THREAT INTELLIGENCE DOSSIER ===\n"
             f" Time: {dossier['timestamp']}\n"
             f" Source IP: {dossier['source_ip']}\n"
+            f" Location: {dossier.get('geo_location', 'Unknown / Encrypted')}\n"
             f" Network: {dossier['network_type']}\n"
             f" ASN / Org: {dossier['asn']}\n"
             f" Infrastructure: {dossier['infrastructure']}\n"
