@@ -60,13 +60,13 @@ class AttackerProfiler:
             isp = "Local Device Interface"
             geo_location = "Localhost (Loopback)"
             risk_tier = "INTERNAL"
-        # Force HIGH risk for all demo attack traffic (whether local Wi-Fi or external) to highlight critical threat posture
+        elif ip_address.startswith("192.168.") or ip_address.startswith("10.") or ip_address.startswith("172."):
+            network_type = "Local Area Network (LAN / Wi-Fi)"
+            asn = "PRIVATE-LAN (RFC-1918)"
+            isp = "Local Router Subnet"
+            geo_location = "Local Subnet (Wi-Fi / Ethernet)"
+            risk_tier = "MEDIUM (Lateral Movement)"
         else:
-            network_type = "External Public Internet / Routed Subnet"
-            asn = "AS16509 (AMAZON-02 - AWS Cloud / Edge Proxy)" if "203." in ip_address or ip_address.startswith("192.") else "AS14061 (DIGITALOCEAN-ASN)"
-            isp = "Cloud Hosting / Attacker Relay"
-            geo_location = "Frankfurt, Germany (Estimated via IP Registry)" if "203." in ip_address else "Ashburn, Virginia, US (Estimated Threat Origin)"
-            risk_tier = "HIGH (External Threat Actor / Critical Breach)"
             # Query real ipstack API for public IPs
             api_data = cls.query_ipstack(ip_address)
             if api_data:
