@@ -1,6 +1,6 @@
-# =============================================================================
+
 # SHADOWMIND — AN ADAPTIVE CYBER DEFENSE SYSTEM
-# =============================================================================
+
 
 [![Status](https://img.shields.io/badge/status-production%20ready-00FF41)](#overview)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)](#tech-stack)
