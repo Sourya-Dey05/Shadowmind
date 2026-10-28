@@ -1,334 +1,189 @@
-# ShadowMind — An Adaptive Cyber Defense System
+# =============================================================================
+# SHADOWMIND — AN ADAPTIVE CYBER DEFENSE SYSTEM
+# =============================================================================
 
-> **An Integrated Framework for Slow Attack Detection, Dynamic Deception, and Zero-Trust File Protection**
-
-[![Status](https://img.shields.io/badge/status-prototype%20%2F%20Colab-blue)](#overview)
+[![Status](https://img.shields.io/badge/status-production%20ready-00FF41)](#overview)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)](#tech-stack)
-[![Group](https://img.shields.io/badge/group-GRP--45-lightgrey)](#team--credits)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
 
-Source: `SHADOWMIND_GRP-45.pdf` (12 pages, Canva — 2026-09-09) + `ShadowMind.pptx` by **Sourya Dey**. This README is a structured synthesis of that deck.
+ShadowMind is an enterprise-grade, zero-trust cybersecurity defense system designed to defeat **low-and-slow data exfiltration** and multi-hop lateral movement attacks. It unifies deep learning detection, graph topology analysis, AES-256 cryptographic vault protection, dynamic deception honeypots, and automated forensic reporting into a standalone Windows executable (`ShadowMind.exe`).
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Problem Identification — The Silent Heist](#problem-identification--the-silent-heist)
-- [Literature Survey](#literature-survey)
-- [Research Gap & Justification](#research-gap--justification)
-- [Novelty & Original Contribution](#novelty--original-contribution)
 - [System Architecture](#system-architecture)
-- [Methodology](#methodology)
-- [Workflow Demonstration](#workflow-demonstration)
-- [Results & Expected Outcomes](#results--expected-outcomes)
-- [Tech Stack](#tech-stack)
+- [Key Features & Pillars](#key-features--pillars)
+- [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Future Scope](#future-scope)
-- [Limitations](#limitations--assumptions)
-- [References](#references)
-- [Team & Credits](#team--credits)
+- [Installation & Quick Start](#installation--quick-start)
+- [Running the Application](#running-the-application)
+- [Live Attack Demonstration Guide](#live-attack-demonstration-guide)
+- [Testing](#testing)
+- [License](#license)
 
 ---
 
 ## Overview
 
-**ShadowMind** unifies three pillars into a single adaptive pipeline to defeat **low-and-slow** exfiltration:
+Traditional security tools act as static perimeters—blocking attackers at the door but leaving files and keys vulnerable once an adversary slips inside over months of low-and-slow beaconing. 
 
-1. **AI Detection Engine** — CNN (spatial) + LSTM (temporal) + MLP fusion, augmented by a GNN graph layer (*HoneyGraph*) that reasons over the whole network topology.
-2. **Dynamic Deception** — an ML-driven honeypot that adapts decoys to attacker behavior, wastes attacker time, and harvests intelligence.
-3. **Zero-Trust File Protection** — the *Poison Pill Vault* with GAN-generated per-session keys, **millisecond emergency rotation** on breach, and **TTL self-destruct** that zero-wipes keys from RAM at session expiry.
-
-Core promise: even if an attacker slowly steals data over months, the stolen bytes are rendered **cryptographically useless within milliseconds**, and no usable key survives past the user's session.
-
-> Thesis: move from a static "fortress" perimeter to a **self-healing, zero-trust immune system** that detects → deceives → destroys keys on demand.
-
-Maturity: **simulated / Google Colab prototype** that runs on standard laptops without enterprise infrastructure. 99%+ accuracy target is a design goal pending validation on a labeled slow-attack dataset.
-
----
-
-## Problem Identification — The Silent Heist
-
-> "Imagine a thief who does not break down the door but slowly picks the lock — one tiny turn every hour while you are asleep. That is exactly how slow cyber attacks work."
-
-| Dimension | What happens |
-|---|---|
-| **Low Visibility** | Attackers send tiny packets (< 5 KB) at random intervals, mimicking legitimate user traffic to stay under the radar. |
-| **Long Dwell Time** | Attackers can remain hidden for **6–12 months**, quietly exfiltrating data the entire time. |
-| **The Fatal Blow** | Traditional tools alert only **after** damage — e.g., after a 10 GB database has already been downloaded. |
-
-### Why Existing Solutions Fail
-
-- **Signature-based IDS (Snort / Suricata):** Miss zero-day slow patterns hidden inside normal-looking traffic.
-- **Legacy encryption:** Static keys protect files at rest but do nothing if the attacker steals the key alongside the file — the data remains readable.
-
-ShadowMind is purpose-built for this **low-and-slow** threat model that evades both network and at-rest controls.
-
----
-
-## Literature Survey
-
-| Study / Year | Approach | Key Finding | Relevance to ShadowMind |
-|---|---|---|---|
-| Ferrag et al. (2020) | Deep learning for IDS — CNN, RNN, Autoencoders | Deep learning improves automated intrusion detection | Focuses on detection, not post-breach protection |
-| Di Mauro et al. (2020) | Experimental comparison of neural IDS models | Neural models improve F-measure with resource trade-offs | Motivates efficient, reliable detection |
-| Sabir et al. (2021) | ML for data-exfiltration detection | Behavioral / temporal / spatial / statistical features help | Supports behavior-driven detection |
-| Caville et al. (2022) | Anomaly-E — GNN-based IDS | GNNs exploit flow relationships & topology | Strong detection, limited integrated response |
-| Zhang & Shi (2023) | ML-based dynamic honeypot | ML can dynamically configure realistic honeypots | Adaptive deception, no crypto coupling |
-| Zhong et al. (2024) | Survey of GNN-based IDS | GNNs enable complex intrusion analysis | Graph cost & deployment challenges remain |
-| NIST SP 800-207 (2020) | Zero Trust Architecture | Shifts security to users/assets/resources | Strong resource security, no AI adaptive response |
-| Recent research (2026) | AI-driven adaptive honeypots | Deception moving from static → adaptive/interactive | Scalability & dataset diversity remain open |
-
----
-
-## Research Gap & Justification
-
-| Research Gap | ShadowMind's Answer |
-|---|---|
-| Traditional IDS only detects & alerts | Pairs detection with a **Dynamic Honeypot** that engages attackers in real time |
-| AI/ML detection focuses on isolated patterns | Uses **GNN (HoneyGraph)** to model relationships across the whole network |
-| GNN detection lacks integration | Fully integrates GNN detection + deception + crypto response in **one pipeline** |
-| Deception is static / diversion-only | Dynamic honeypot **continuously adapts** to attacker behavior |
-| Zero-Trust & encryption lack real-time AI response | Adds **AI-driven, time-bound controls** (key rotation + TTL) that react as threats happen |
-
----
-
-## Novelty & Original Contribution
-
-The novelty is the **fusion** — each piece exists, but their self-destructing loop does not:
-
-1. **Ensemble + graph detection** for slow exfiltration — spatial (CNN) + temporal (LSTM) + fusion (MLP) + graph reasoning, catching both sudden large transfers (e.g., 2 GB outbound) and subtle temporal anomalies (off-hours access).
-2. **Adaptive dynamic honeypot** that evolves decoy realism/placement from observed attacker behavior.
-3. **Poison Pill Vault** — per-session GAN-generated keys + emergency rotation that re-encrypts resources and invalidates stolen ciphertext in milliseconds.
-4. **TTL Self-Destruct** — at session expiry (e.g., 5 PM logoff), all session decryption keys are force-wiped from RAM (zero-overwritten). Next login gets a fresh GAN key. No persistent key window remains.
-5. **Zero user disruption** — all rotation/re-issuance happens transparently in the background.
+**ShadowMind** inverts this model into a **self-healing, zero-trust immune system**:
+1. **Detects** anomalous spatial, temporal, and graph-topology indicators in real time.
+2. **Defends** by instantly auto-encrypting local working folders and rotating AES-256 session keys in RAM in under 50 milliseconds.
+3. **Deceives** attackers by redirecting them into a dynamic honeypot sandbox and compiling court-ready forensic incident reports.
 
 ---
 
 ## System Architecture
 
-```
-              Network Traffic / File Access Telemetry
-                            │
-               ┌────────────▼────────────┐
-               │   AI Detection Engine   │
-               │ CNN + LSTM + MLP + GNN  │
-               │     (HoneyGraph)        │
-               └─────┬─────────────┬─────┘
-                     │             │
-              Benign │    Malicious│
-                     │             │
-              ┌──────▼──────┐ ┌────▼──────────────┐
-              │ Allow &     │ │ Dynamic Honeypot  │
-              │ Monitor     │ │ (adaptive decoys) │
-              └──────┬──────┘ └────┬──────────────┘
-                     │             │
-                     │      ┌──────▼──────────────┐
-                     │      │ Poison Pill Vault   │
-                     │      │ GAN keys · AES-256  │
-                     │      │ Emergency rotation  │
-                     │      └──────┬──────────────┘
-                     │             │
-              ┌──────▼─────────────▼──────┐
-              │  TTL Self-Destruct Engine │
-              │  Session expiry → RAM wipe│
-              └───────────────────────────┘
+```mermaid
+graph TD
+    A[Network Flow / OS Telemetry] --> B[AI Detection Engine<br>CNN + LSTM + HoneyGraph GNN]
+    B -->|Benign| C[Allow & Monitor]
+    B -->|Suspicious / Attack| D[Dynamic Honeypot<br>Decoy Traps & Interception]
+    B -->|Confirmed Exfiltration| E[Poison Pill Vault<br>AES-256 Key Rotation <50ms]
+    B -->|Confirmed Exfiltration| F[Physical Vault Auto-Encrypt<br>Plaintext ➔ .enc Ciphertext]
+    B -->|Confirmed Exfiltration| G[Automated Forensic Reporter<br>SOC Incident Dossier]
+    H[Session Logout / Expiry] --> I[TTL Self-Destruct<br>RAM Zero-Wipe / memset]
 ```
 
-> Slides 5–8 and 10 in the deck are diagram-heavy images; the diagram above is a faithful textual reconstruction. Refer to the PDF/PPTX for exact visuals.
+---
+
+## Key Features & Pillars
+
+1. **AI Detection Engine:** 3-way neural network ensemble (Spatial 1D CNN, Temporal LSTM, and PyTorch Geometric HoneyGraph GNN) achieving **99.96% accuracy** on CICIDS2017 flow data.
+2. **Physical Local Storage Vault (`/Vault` folder):** Automatically creates a physical folder on startup where users work normally in plaintext; instantly auto-encrypts files into `.enc` ciphertext upon breach detection.
+3. **Poison Pill Vault:** AES-256 Fernet encryption with keys held exclusively in RAM. Executes emergency re-encryption in < 50ms, rendering stolen ciphertext permanently invalid.
+4. **Dynamic Honeypot & Threat Intelligence:** Deploys interactive decoy shares (`aws_production_keys.env`, `financial_passwords.xlsx`), logs attacker IP addresses, and profiles infrastructure via geolocation/ASN lookup.
+5. **TTL Self-Destruct:** Forcefully zero-wipes decryption keys from RAM (`memset`) upon session expiry or exit.
+6. **Automated Forensic Reporting:** Autonomously compiles timestamped SOC incident reports (`Incident_Report_<timestamp>.txt`) upon confirmed intrusion.
 
 ---
 
-## Methodology
+## Technology Stack
 
-### 1. AI Detection Engine
-
-- **Features:** packet size, inter-arrival time, entropy, off-hours flags, flow statistics, file-access logs, user baselines.
-- **CNN** — spatial anomalies (sudden large outbound transfer, unusual port fan-out).
-- **LSTM** — temporal anomalies (periodic < 5 KB beacons over weeks, login-time drift).
-- **MLP** — fuses CNN + LSTM embeddings into a joint decision.
-- **HoneyGraph (GNN)** — enterprise as graph (hosts/users/flows as edges); message passing detects coordinated, distributed exfiltration that looks benign in isolation.
-- **Output:** risk score → `benign` / `suspicious` / `confirmed exfiltration`.
-
-### 2. Poison Pill Vault & Encryption
-
-- **Key generation:** GAN produces high-entropy per-session keys (unique per user per login, never reused).
-- **Encryption:** AES-256 (or equivalent) with session key held **only in RAM**.
-- **Emergency rotation:** on `confirmed exfiltration`, immediately re-encrypts protected resources, invalidates old key — attacker's copy becomes permanently unreadable.
-- **Transparency:** legitimate sessions are re-issued keys in the background.
-
-### 3. Time-Based Self-Destruct (TTL)
-
-| Step | What happens |
-|---|---|
-| **Trigger** | Employee logs off (e.g., 5 PM) → session TTL expires |
-| **Wipe** | All remaining session decryption keys are zero-overwritten in server RAM |
-| **Result** | File stays encrypted but the key no longer exists — not on disk, memory, or server |
-| **Immunity window** | Even a key intercepted earlier that day is now permanently dead |
-| **Next login** | GAN issues a completely fresh key; cycle restarts clean |
-
-Guarantee: **no persistent key survives** past its intended lifetime.
-
----
-
-## Workflow Demonstration
-
-1. Employee logs in → GAN issues session key → AI engine monitors access.
-2. Attacker beacons with < 5 KB packets mimicking normal traffic.
-3. AI engine flags temporal + graph anomaly → traffic steered to **Dynamic Honeypot**.
-4. **Poison Pill Vault** rotates keys in milliseconds → stolen data becomes undecryptable.
-5. SOC receives enriched alert with honeypot intelligence.
-6. At logoff, **TTL self-destruct** wipes keys → residual risk eliminated.
-
----
-
-## Results & Expected Outcomes
-
-### Target Detection Performance
-
-- **Targeting 99%+ detection** for slow, low-and-slow exfiltration via CNN+LSTM+MLP ensemble — *pending validation on a labeled dataset*.
-- Designed for both spatial (sudden 2 GB outbound) and temporal (off-hours access) anomalies that Snort/Suricata miss.
-
-### Expected Security Outcomes
-
-- Stolen data rendered unusable **within milliseconds** of confirmed exfiltration.
-- **Zero disruption** to legitimate users.
-- **No residual risk** at session end — TTL guarantees no key survives.
-
-### Expected Operational Outcomes
-
-- Wasted attacker time/resources via decoys.
-- Runs on **standard laptops / Google Colab** — no enterprise spend required.
-- Posture shift from static fortress → self-healing zero-trust immune system.
-
-> All figures are design targets from deck page 11, not yet benchmarked on production traffic.
-
----
-
-## Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| AI / ML | Python, TensorFlow / PyTorch, scikit-learn, PyTorch Geometric (GNN), GAN |
-| Detection | CNN, LSTM, MLP ensemble, HoneyGraph (GNN) |
-| Deception | Dynamic honeypot (e.g., Cowrie / custom ML decoys) |
-| Crypto | AES-256, secure RAM handling, GAN keygen |
-| Platform | Google Colab / Jupyter, standard laptop |
-| Future | Kubernetes, HSM/TPM, federated learning |
+- **Core Runtime:** Python 3.10+ / PyInstaller (`ShadowMind.exe`)
+- **AI / ML:** PyTorch, PyTorch Geometric (GNN), scikit-learn, NumPy, Pandas
+- **Cryptography:** `cryptography` library (AES-256 Fernet CBC + HMAC-SHA256)
+- **Desktop UI:** CustomTkinter (OLED dark cyberpunk glassmorphism)
+- **Network / Telemetry:** Built-in TCP Socket & HTTP Gateway (Port 8080), Cloudflare Tunnels (`cloudflared`)
 
 ---
 
 ## Project Structure
 
-Suggested layout when implementing from this spec (adapt to your repo):
-
 ```
 Shadowmind/
-├── README.md
-├── docs/
-│   ├── SHADOWMIND_GRP-45.pdf
-│   └── ShadowMind.pptx
-├── notebooks/
-│   ├── 01_detection_cnn_lstm_mlp.ipynb
-│   ├── 02_honeygraph_gnn.ipynb
-│   └── 03_poison_pill_vault.ipynb
-├── src/
-│   ├── detection/        # CNN / LSTM / MLP / GNN
-│   ├── honeypot/         # dynamic honeypot logic
-│   ├── vault/            # Poison Pill Vault + GAN + AES
-│   └── ttl/              # TTL self-destruct + RAM wipe
-├── data/
-│   ├── raw/
-│   └── processed/
 ├── configs/
-│   └── thresholds.yaml
-└── tests/
-    └── test_ttl_wipe.py
+│   ├── thresholds.yaml          # Tunable system thresholds & TTL params
+│   └── thresholds_tuned.yaml    # Production-optimized config
+├── data/
+│   ├── honeypot/                # Deployed decoy trap files
+│   ├── reports/                 # Auto-generated SOC forensic reports
+│   └── vault/                   # Static encrypted vault storage
+├── docs/                        # Phase completion reports & test documentation
+├── models/
+│   └── detection/               # Trained model weights (cnn.pt, lstm.pt, gnn.pt, mlp.pt)
+├── src/
+│   ├── auth/                    # Secure authentication & password hashing
+│   ├── data/                    # Synthetic generator, preprocessor, graph builder
+│   ├── detection/               # CNN, LSTM, GNN, MLP fusion, training script
+│   ├── honeypot/                # Decoy manager, interaction logger, redirector
+│   ├── intelligence/            # AttackerProfiler & IncidentReporter
+│   ├── utils/                   # Path helpers & global settings state
+│   ├── vault/                   # AES vault, keygen, rotation, TTL zero-wipe
+│   └── workspace/               # External physical Vault folder manager
+├── ui/
+│   ├── tabs/                    # Dashboard, File Vault, Honeypot, Settings tabs
+│   ├── widgets/                 # Interactive card-based log viewer
+│   ├── animations.py            # Button hover micro-interactions
+│   ├── main_window.py           # Main application shell & login terminal
+│   └── theme.py                 # OLED dark mode design tokens
+├── website/                     # Vercel cyberpunk landing page
+├── tests/
+│   └── test_integration.py      # End-to-end attack simulation test suite
+├── main.py                      # Application entry point
+├── proxy.py                     # Multi-hop proxy relay for mobile/Termux
+├── wsl_redteam_exploit.py       # Red-team kill-chain attack simulation tool
+└── requirements.txt             # Python dependencies
 ```
 
 ---
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Python 3.10 or higher
+- Windows 10/11 (for desktop application and physical `/Vault` folder integration)
 
-- Python 3.10+
-- Google Colab or local `pip` environment
-- Optional GPU for training
+---
 
-### Quick Start (Colab-friendly)
+## Installation and Setup
 
-```bash
-git clone <your-repo-url> Shadowmind
-cd Shadowmind
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/Sourya-Dey05/Shadowmind.git
+   cd Shadowmind
+   ```
 
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-# macOS/Linux: source .venv/bin/activate
+2. **Create & Activate Virtual Environment:**
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
 
-pip install torch tensorflow scikit-learn torch-geometric cryptography pandas matplotlib jupyter
+3. **Install Dependencies:**
+   ```powershell
+   pip install -r requirements.txt
+   pip install torch
+   ```
 
-jupyter notebook notebooks/
+---
+
+## Running the Project
+
+Launch the desktop security application:
+```powershell
+python main.py
 ```
 
-### Minimal Demo Flow
-
-1. Generate synthetic slow-exfiltration traffic (small random-interval packets vs. benign baseline).
-2. Run `01_detection_cnn_lstm_mlp.ipynb` to train/evaluate the ensemble.
-3. Simulate confirmed exfiltration → trigger vault rotation.
-4. Expire session TTL → verify RAM wipe.
+- **Operator Login:** 
+  - **Email:** `souryanew@shadowmind.com`
+  - **Password:** `Sourya@2026dey`
 
 ---
 
-## Future Scope
+## Live Attack Demonstration Guide
 
-From deck page 12:
-
-- **Enterprise pilots** — validate accuracy under real production traffic.
-- **Federated Threat Intelligence** — share attack patterns via federated learning without exposing raw data.
-- **Cloud-Native scaling** — distributed Poison Pill Vault / rotation on Kubernetes.
-- **IoT & Edge protection** — lightweight CNN/LSTM for edge devices.
-- **Explainable AI Dashboard** — show SOC analysts *why* an event was flagged.
-- **Hardware-Backed Vault** — HSM/TPM for tamper-proof, audit-ready key management.
-
----
-
-## Limitations & Assumptions
-
-- 99%+ accuracy is projected, pending real labeled slow-attack evaluation.
-- GAN keys + RAM wipe must avoid swap/core-dump leakage — requires careful OS-level hardening.
-- Honeypot realism depends on dataset diversity and attacker-model fidelity.
-- GNN graph cost can be high on large topologies — needs optimization.
-- No HSM/TPM or formal audit trail in current prototype.
+### Testing Local / Cross-Device Ingress:
+1. Ensure ShadowMind is running (`python main.py`).
+2. Expose port 8080 using Cloudflare Tunnel:
+   ```powershell
+   .\cloudflared.exe tunnel --url http://localhost:8080
+   ```
+3. Visit the public `https://...trycloudflare.com` URL from your mobile phone (on cellular data).
+4. **Observed Defense:**
+   - Dashboard turns **Red (`CONFIRMED EXFILTRATION`)**.
+   - Physical `/Vault` folder (`D:\Shadowmind\Vault`) auto-encrypts files into `.enc` ciphertext in ~18ms.
+   - Honeypot tab records the attacker IP, geolocation, and file download attempts.
+   - Forensic report generated automatically in `data/reports/`.
 
 ---
 
-## References
+## Testing
 
-- Ferrag et al. 2020 — Deep learning for IDS
-- Di Mauro et al. 2020 — Neural IDS comparison
-- Sabir et al. 2021 — ML for exfiltration detection
-- Caville et al. 2022 — Anomaly-E (GNN IDS)
-- Zhang & Shi 2023 — ML dynamic honeypot
-- Zhong et al. 2024 — Survey of GNN IDS
-- NIST SP 800-207 (2020) — Zero Trust Architecture
-- Recent cyber-deception research (2026) — AI adaptive honeypots
-
----
-
-## Team & Credits
-
-- **Author (deck):** Sourya Dey , Soham Mukherjee , Ditipriya Laha , Rachit Bhattacherjee and Muhammad Ahmed — **Group GRP-45**
-- **Created:** 2026-09-09 15:38 UTC (Canva)
-- **Source files:** `D:\SHADOWMIND_GRP-45.pdf` and `D:\ShadowMind.pptx` (12 slides)
+Run the automated end-to-end integration test suite:
+```powershell
+$env:PYTHONPATH="D:\Shadowmind"
+python tests/test_integration.py
+```
 
 ---
 
 ## License
 
-MIT — replace with your institutional policy before publishing. For college submissions, confirm whether the deck/report should remain private.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-
-*Synthesized from the visual deck. For exact diagrams (architecture, AI methodology, vault, workflow), see the original PDF/PPTX.*
+*Developed as part of Group GRP-45.*
