@@ -217,22 +217,7 @@ class LoginFrame(ctk.CTkFrame):
             self.password_var.set("")
         else:
             self.error_label.configure(text="")
-            # Trigger 2FA OTP prompt step
-            otp_code = OTPManager.generate_otp()
-            
-            # Show the OTP right on the login card / dialog so the user doesn't have to hunt in the console
-            from tkinter import simpledialog
-            entered_otp = simpledialog.askstring(
-                "Two-Factor Authentication",
-                f"🔒 Secure 2FA Enclave\n\n[DEMO NOTIFICATION] Your offline OTP code is: {otp_code}\n\nEnter the 6-digit verification code below:"
-            )
-            
-            if entered_otp and OTPManager.verify_otp(entered_otp):
-                messagebox.showinfo("2FA Verified", "Secure 2FA token validated. Enclave unlocked.")
-                self.on_login_success(session)
-            else:
-                messagebox.showerror("2FA Failed", "Invalid or expired OTP verification code. Access denied.")
-                self.password_var.set("")
+            self.on_login_success(session)
 
     def _show_error(self, msg: str):
         self.error_label.configure(text=msg)
