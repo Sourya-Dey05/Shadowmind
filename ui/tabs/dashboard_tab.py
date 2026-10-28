@@ -293,6 +293,13 @@ class DashboardTab(ctk.CTkFrame):
                     except Exception as ev_err:
                         self.after(0, lambda err=ev_err: self._append_log(f"External vault encrypt error: {err}"))
 
+                    # Record breach telemetry in global AppSettings for Settings Tab audit inspection
+                    try:
+                        from src.utils.settings_state import AppSettings
+                        AppSettings.record_exfil(source_ip, f"CONFIRMED EXFILTRATION (Score: {score})")
+                    except Exception:
+                        pass
+
                     # Generate Threat Intelligence Dossier and Auto-Generate Forensic Incident Report!
                     try:
                         from src.intelligence.profiler import AttackerProfiler
