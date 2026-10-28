@@ -100,7 +100,7 @@ class LoginFrame(ctk.CTkFrame):
         ).grid(row=2, column=0, pady=(6, 2))
 
         ctk.CTkLabel(
-            self, text="Self - Destructing AI Defense System",
+            self, text="An Adaptive Cyber Defense System",
             font=ctk.CTkFont(family=FONT_BODY, size=13),
             text_color=C_SUBTEXT
         ).grid(row=3, column=0, pady=(0, 20))
