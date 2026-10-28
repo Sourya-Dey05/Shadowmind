@@ -1,6 +1,6 @@
 # =============================================================================
 # SHADOWMIND — ACADEMIC NOVELTY & LITERATURE COMPARISON REPORT
-# Group GRP-45 | Author: Sourya Dey
+# Group GRP-45 |
 # =============================================================================
 
 ## 1. Introduction & Research Context
