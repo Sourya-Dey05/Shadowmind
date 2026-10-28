@@ -1,4 +1,4 @@
-# ShadowMind — The Self-Destructing AI Defense System
+# ShadowMind — An Adaptive Cyber Defense System
 
 > **An Integrated Framework for Slow Attack Detection, Dynamic Deception, and Zero-Trust File Protection**
 
