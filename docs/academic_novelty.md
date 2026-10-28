@@ -1,6 +1,11 @@
 # =============================================================================
+<<<<<<< HEAD
 # SHADOWMIND — COMPREHENSIVE LITERATURE SURVEY & ACADEMIC NOVELTY REPORT
 # Group GRP-45 | Author: Sourya Dey
+=======
+# SHADOWMIND — ACADEMIC NOVELTY & LITERATURE COMPARISON REPORT
+# Group GRP-45 |
+>>>>>>> d974c7d940230168fd130c7a05efea2705bf1be8
 # =============================================================================
 
 ## 1. Introduction & Research Scope
