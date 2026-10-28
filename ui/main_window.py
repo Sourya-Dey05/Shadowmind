@@ -115,15 +115,15 @@ class LoginFrame(ctk.CTkFrame):
             text_color=C_TEXT
         ).grid(row=0, column=0, pady=(22, 14))
 
-        self.username_var = ctk.StringVar(value="admin")
-        self.password_var = ctk.StringVar()
+        self.username_var = ctk.StringVar(value="souryanew@shadowmind.com")
+        self.password_var = ctk.StringVar(value="")
 
         ctk.CTkLabel(
-            card, text="USERNAME", text_color=C_SUBTEXT,
+            card, text="OPERATOR EMAIL", text_color=C_SUBTEXT,
             font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold")
         ).grid(row=1, column=0, sticky="w", padx=28)
         self.user_entry = ctk.CTkEntry(
-            card, textvariable=self.username_var, placeholder_text="Enter username",
+            card, textvariable=self.username_var, placeholder_text="Enter admin email",
             width=324, height=38, corner_radius=6,
             fg_color=C_SURFACE, border_color=C_BORDER, text_color=C_TEXT,
             font=ctk.CTkFont(family=FONT_MONO, size=12)

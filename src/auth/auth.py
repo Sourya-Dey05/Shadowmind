@@ -66,19 +66,16 @@ class Session:
 # Input sanitization
 # ---------------------------------------------------------------------------
 
-_USERNAME_RE = re.compile(r"^[A-Za-z0-9_.@-]{3,64}$")
+_EMAIL_RE = re.compile(r"^[\w\.\-_]+@([\w\-_]+\.)+[\w\-]{2,4}$")
 
-def sanitize_username(username: str) -> str:
-    """
-    Strip whitespace and validate username format.
-    Raises ValueError on invalid input — prevents SQL injection / path traversal.
-    """
-    if not isinstance(username, str):
-        raise ValueError("Username must be a string")
-    username = username.strip()
-    if not _USERNAME_RE.match(username):
-        raise ValueError("Username contains invalid characters or is too short/long")
-    return username
+def sanitize_email(email: str) -> str:
+    """Validate email address format."""
+    if not isinstance(email, str):
+        raise ValueError("Email must be a string")
+    email = email.strip().lower()
+    if not _EMAIL_RE.match(email):
+        raise ValueError("Invalid email format")
+    return email
 
 def sanitize_password(password: str) -> str:
     """
@@ -161,16 +158,15 @@ def verify_password(password: str, password_hash: str) -> bool:
     except Exception:
         return False
 
-def register_user(username: str, password: str, role: Role = Role.USER) -> bool:
+def register_user(email: str, password: str, role: Role = Role.USER) -> bool:
     """
-    Register a new user. Returns True on success, False if username taken.
-    Passwords are never stored — only the bcrypt hash.
+    Register a new user by email. Returns True on success, False if email taken.
     """
     _init_db()
     cfg = _load_config()
     min_len = cfg["auth"]["min_password_length"]
 
-    username = sanitize_username(username)
+    email = sanitize_email(email)
     password = sanitize_password(password)
 
     if len(password) < min_len:
@@ -182,24 +178,18 @@ def register_user(username: str, password: str, role: Role = Role.USER) -> bool:
         with _get_db() as conn:
             conn.execute(
                 "INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
-                (username, pw_hash, role.value, time.time())
+                (email, pw_hash, role.value, time.time())
             )
             conn.commit()
-        logger.info(f"User registered: {username} [{role.value}]")
+        logger.info(f"User registered: {email} [{role.value}]")
         return True
     except sqlite3.IntegrityError:
-        logger.warning(f"Registration failed — username already exists: {username}")
+        logger.warning(f"Registration failed — email already exists: {email}")
         return False
 
-def login(username: str, password: str) -> Optional[Session]:
+def login(email: str, password: str) -> Optional[Session]:
     """
-    Authenticate a user. Returns a Session on success, None on failure.
-
-    Security measures:
-    - Account lockout after max_login_attempts failures
-    - Constant-time password comparison (bcrypt)
-    - No detail in error messages (don't reveal if username exists)
-    - Failed attempts logged (without password)
+    Authenticate a user via email. Returns a Session on success, None on failure.
     """
     _init_db()
     cfg = _load_config()
@@ -208,7 +198,7 @@ def login(username: str, password: str) -> Optional[Session]:
     session_ttl    = cfg["auth"]["session_ttl_seconds"]
 
     try:
-        username = sanitize_username(username)
+        email = sanitize_email(email)
         password = sanitize_password(password)
     except ValueError as e:
         logger.warning(f"Login rejected — input validation failed: {e}")
@@ -217,57 +207,48 @@ def login(username: str, password: str) -> Optional[Session]:
     with _get_db() as conn:
         row = conn.execute(
             "SELECT password_hash, role, failed_attempts, locked_until FROM users WHERE username = ?",
-            (username,)
+            (email,)
         ).fetchone()
 
-    # Intentionally vague — do not reveal if username exists
     if row is None:
-        # Still run bcrypt to prevent timing-based username enumeration
         bcrypt.checkpw(b"dummy", bcrypt.hashpw(b"dummy", bcrypt.gensalt(4)))
-        logger.warning(f"Login failed (unknown user): {username}")
+        logger.warning(f"Login failed (unknown email): {email}")
         return None
 
     pw_hash, role_str, failed, locked_until = row
 
-    # Lockout check
     if time.time() < locked_until:
         remaining = int(locked_until - time.time())
-        logger.warning(f"Login blocked — account locked for {remaining}s: {username}")
+        logger.warning(f"Login blocked — account locked for {remaining}s: {email}")
         return None
 
-    # Password check
     if not verify_password(password, pw_hash):
         new_failed = failed + 1
         new_locked = time.time() + lockout_dur if new_failed >= max_attempts else 0.0
         with _get_db() as conn:
             conn.execute(
                 "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE username = ?",
-                (new_failed, new_locked, username)
+                (new_failed, new_locked, email)
             )
             conn.commit()
-        if new_locked:
-            logger.warning(f"Account locked after {max_attempts} failures: {username}")
-        else:
-            logger.warning(f"Login failed attempt {new_failed}/{max_attempts}: {username}")
         return None
 
-    # Success — reset failure counter
     with _get_db() as conn:
         conn.execute(
             "UPDATE users SET failed_attempts = 0, locked_until = 0.0 WHERE username = ?",
-            (username,)
+            (email,)
         )
         conn.commit()
 
-    token = secrets.token_hex(32)  # 256-bit cryptographically secure token
+    token = secrets.token_hex(32)
     session = Session(
-        username=username,
+        username=email,
         role=Role(role_str),
         token=token,
         created_at=time.time(),
         ttl_seconds=session_ttl,
     )
-    logger.info(f"Login success: {username} [{role_str}]")
+    logger.info(f"Login success: {email} [{role_str}]")
     return session
 
 def require_role(session: Optional[Session], required: Role) -> bool:
@@ -301,20 +282,28 @@ def logout(session: Optional[Session]) -> None:
 # Bootstrap: create default admin on first run
 # ---------------------------------------------------------------------------
 
-def bootstrap_admin(username: str = "admin", password: str = None) -> None:
+def bootstrap_admin(email: str = "souryanew@shadowmind.com", password: str = "Sourya@2026dey") -> None:
     """
-    Create the default admin account if no users exist yet.
-    Password MUST be changed on first login in production.
-    In demo mode a random password is generated and printed once.
+    Create the default admin account with email authentication and Sourya@2026dey password.
+    If database exists, ensures admin email is updated with the correct password hash.
     """
     _init_db()
+    pw_hash = hash_password(password)
     with _get_db() as conn:
-        count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    if count == 0:
-        if password is None:
-            password = secrets.token_urlsafe(16)
-            logger.info(f"[BOOTSTRAP] Default admin password (change immediately): {password}")
-        register_user(username, password, Role.ADMIN)
+        row = conn.execute("SELECT id FROM users WHERE username = ?", (email,)).fetchone()
+        if row is None:
+            conn.execute(
+                "INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+                (email, pw_hash, Role.ADMIN.value, time.time())
+            )
+            logger.info(f"Admin bootstrap created: {email}")
+        else:
+            conn.execute(
+                "UPDATE users SET password_hash = ?, role = ? WHERE username = ?",
+                (pw_hash, Role.ADMIN.value, email)
+            )
+            logger.info(f"Admin credentials updated: {email}")
+        conn.commit()
 
 
 if __name__ == "__main__":
