@@ -19,7 +19,6 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.auth.auth import login, logout, require_role, bootstrap_admin, Role, Session
-from src.auth.otp import OTPManager
 from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.vault_tab import VaultTab
 from ui.tabs.honeypot_tab import HoneypotTab
