@@ -10,9 +10,21 @@ import customtkinter as ctk
 import threading
 import time
 import numpy as np
+from ui.theme import (
+    COLOR_BG as C_BG,
+    COLOR_CARD as C_PANEL,
+    COLOR_CYAN as C_ACCENT,
+    COLOR_SUCCESS as C_SUCCESS,
+    COLOR_WARNING as C_WARNING,
+    COLOR_DANGER as C_DANGER,
+    COLOR_TEXT_PRIMARY as C_TEXT,
+    COLOR_TEXT_SECONDARY as C_SUBTEXT,
+    COLOR_BORDER as C_BORDER,
+    COLOR_SURFACE as C_SURFACE,
+    FONT_BRAND, FONT_MONO, FONT_BODY
+)
 from src.auth.auth import Session
 from src.detection.engine import DetectionEngine
-
 from ui.widgets.scrollable_log import InteractiveLogViewer
 
 
