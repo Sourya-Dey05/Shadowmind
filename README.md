@@ -39,7 +39,7 @@ Traditional security tools act as static perimeters—blocking attackers at the 
 
 ## Novelty & Research Contributions
 
-ShadowMind addresses key limitations identified in recent cybersecurity literature by fusing AI detection, topology reasoning, and ephemeral cryptography into a unified automated pipeline.
+ShadowMind addresses key limitations identified in recent cybersecurity literature by fusing AI detection, topology reasoning, and ephemeral cryptography into a unified automated pipeline. For an exhaustive comparison against all 13 foundational studies from our literature survey, refer to [`docs/academic_novelty.md`](docs/academic_novelty.md).
 
 | Related Literature / Study | Prior Approach & Limitation | ShadowMind's Academic Novelty |
 |---|---|---|
