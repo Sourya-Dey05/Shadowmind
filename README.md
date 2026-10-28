@@ -13,6 +13,7 @@ ShadowMind is an enterprise-grade, zero-trust cybersecurity defense system desig
 ## Table of Contents
 
 - [Overview](#overview)
+- [Novelty & Research Contributions](#novelty--research-contributions)
 - [System Architecture](#system-architecture)
 - [Key Features & Pillars](#key-features--pillars)
 - [Technology Stack](#technology-stack)
@@ -36,7 +37,16 @@ Traditional security tools act as static perimeters—blocking attackers at the 
 
 ---
 
-## System Architecture
+## Novelty & Research Contributions
+
+ShadowMind addresses key limitations identified in recent cybersecurity literature by fusing AI detection, topology reasoning, and ephemeral cryptography into a unified automated pipeline.
+
+| Related Literature / Study | Prior Approach & Limitation | ShadowMind's Academic Novelty |
+|---|---|---|
+| **Ferrag et al. (2020)**<br>*Deep learning for IDS* | Focuses on isolated deep learning models (CNN, RNN) for traffic classification without automated post-breach response. | Pairs the 3-way AI detection engine with an automated **Poison Pill Vault** that re-encrypts assets in <50ms upon breach. |
+| **Caville et al. (2022) & Zhong et al. (2024)**<br>*GNN-based IDS / Anomaly-E* | Uses Graph Neural Networks to analyze network flow topology, but lacks active deception or dynamic asset re-encryption. | Combines **HoneyGraph GNN** message passing with a **Dynamic Honeypot** to misdirect attackers while locking real files. |
+| **Zhang & Shi (2023)**<br>*ML-based dynamic honeypot* | Demonstrates machine learning configured honeypots for attacker diversion, operating independently of encryption enclaves. | Fuses dynamic deception directly with the **Poison Pill Vault** and physical folder auto-encryption. |
+| **NIST SP 800-207 (2020)**<br>*Zero Trust Architecture* | Defines architecture for securing users and resources, lacking real-time AI adaptive response and ephemeral RAM key management. | Implements **TTL Self-Destruct** (RAM zero-wipe) and per-session secure keys to guarantee zero persistent key windows. |
 
 ```mermaid
 graph TD
