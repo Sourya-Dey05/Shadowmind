@@ -355,14 +355,15 @@ class ShadowMindApp(ctk.CTk):
         logout_btn.pack(side="left")
         CyberAnimator.apply_button_hover(logout_btn, "#2b1418", C_DANGER, C_DANGER, "#ffffff")
 
-        # Tab view with Figma border & surface styling
+        # Optimized Tab View for zero-lag page switching
         self.tabs = ctk.CTkTabview(self, fg_color=C_BG,
                                    segmented_button_fg_color=C_SURFACE,
                                    segmented_button_selected_color=C_PANEL,
                                    segmented_button_selected_hover_color=C_PANEL,
                                    segmented_button_unselected_color=C_SURFACE,
                                    segmented_button_unselected_hover_color=C_SURFACE,
-                                   text_color=C_TEXT)
+                                   text_color=C_TEXT,
+                                   command=self._on_tab_changed)
         self.tabs.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tabs.add("Dashboard")
@@ -378,9 +379,12 @@ class ShadowMindApp(ctk.CTk):
         if require_role(self.session, Role.ADMIN):
             SettingsTab(self.tabs.tab("Settings"), self.session).pack(fill="both", expand=True)
 
-    # -------------------------------------------------------------------------
-    # TTL watcher
-    # -------------------------------------------------------------------------
+    def _on_tab_changed(self):
+        """Instant zero-latency tab switcher."""
+        try:
+            self.update_idletasks()
+        except Exception:
+            pass
 
     def _start_ttl_watcher(self):
         """Background thread that checks session TTL every second."""
