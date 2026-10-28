@@ -63,11 +63,10 @@ class InteractiveLogViewer(ctk.CTkScrollableFrame):
                 fg_color=bg_color,
                 corner_radius=6,
                 border_width=1,
-                border_color=COLOR_BORDER,
-                height=38
+                border_color=COLOR_BORDER
+                # removed fixed height so long messages expand vertically and never get cut off
             )
-            row_card.pack(fill="x", pady=2, padx=4)
-            row_card.pack_propagate(False)
+            row_card.pack(fill="x", pady=3, padx=4)
 
             # Severity Badge
             badge = ctk.CTkLabel(
@@ -80,14 +79,16 @@ class InteractiveLogViewer(ctk.CTkScrollableFrame):
                 width=48,
                 height=20
             )
-            badge.pack(side="left", padx=10, pady=8)
+            badge.pack(side="left", padx=10, pady=8, anchor="n")
 
-            # Log Message (fully visible, wraps cleanly or expands)
+            # Log Message with full text wrapping enabled
             msg_lbl = ctk.CTkLabel(
                 row_card,
                 text=msg,
                 font=ctk.CTkFont(family=FONT_MONO, size=11),
                 text_color=COLOR_TEXT_PRIMARY,
-                anchor="w"
+                anchor="w",
+                justify="left",
+                wraplength=450  # Automatically wraps long IP paths and telemetry text cleanly
             )
             msg_lbl.pack(side="left", padx=4, pady=8, fill="x", expand=True)
