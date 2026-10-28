@@ -1,14 +1,15 @@
 # =============================================================================
 # FILE: ui/tabs/honeypot_tab.py
-# PURPOSE: Honeypot tab UI (Fully wired in Phase 4).
-#          Displays active deployed decoys, attacker interaction logs, and
-#          real-time telemetry from the HoneypotRedirector and InteractionLogger.
+# PURPOSE: Dynamic Honeypot Tab UI (Polished user-friendly dashboard view).
+#          Replaces raw terminal textboxes with structured, color-coded cards
+#          for deployed traps and live attacker interception intel.
 # =============================================================================
 
 import customtkinter as ctk
 from src.auth.auth import Session
 from src.honeypot.decoy_manager import DecoyManager
 from src.honeypot.interaction_log import InteractionLogger
+from ui.animations import CyberAnimator
 
 from ui.theme import (
     COLOR_BG as C_BG,
@@ -16,6 +17,7 @@ from ui.theme import (
     COLOR_CYAN as C_ACCENT,
     COLOR_WARNING as C_WARNING,
     COLOR_SUCCESS as C_SUCCESS,
+    COLOR_DANGER as C_DANGER,
     COLOR_TEXT_PRIMARY as C_TEXT,
     COLOR_TEXT_SECONDARY as C_SUBTEXT,
     COLOR_BORDER as C_BORDER,
@@ -26,8 +28,8 @@ from ui.theme import (
 
 class HoneypotTab(ctk.CTkFrame):
     """
-    Dynamic Honeypot UI: active decoys, live attacker interaction log,
-    and redirection metrics.
+    User-friendly Dynamic Honeypot UI: active decoys cards, live structured
+    attacker interaction intel feed, and ML deception adapter status.
     """
 
     def __init__(self, parent, session: Session):
@@ -41,73 +43,77 @@ class HoneypotTab(ctk.CTkFrame):
     def _build(self):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
 
         # --- Status cards ---
-        self.decoy_count_card, self.decoy_val_lbl = self._card(0, "Active Decoys", "0", C_WARNING)
-        self.diverted_card, self.diverted_val_lbl = self._card(1, "Attackers Diverted", "0", C_SUCCESS)
+        self.decoy_card, self.decoy_val_lbl = self._card(0, "Active Deception Traps", "0", C_WARNING, "SANDBOX ISOLATED")
+        self.diverted_card, self.diverted_val_lbl = self._card(1, "Attackers Diverted", "0", C_SUCCESS, "TRAPS TRIGGERED")
 
-        # --- Left: decoy list ---
-        decoy_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
-        decoy_frame.grid(row=1, column=0, padx=(12, 6), pady=12, sticky="nsew")
+        # --- Left: decoy structured cards list ---
+        decoy_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=12, border_width=1, border_color=C_BORDER)
+        decoy_frame.grid(row=2, column=0, padx=(16, 8), pady=(0, 16), sticky="nsew")
         decoy_frame.grid_rowconfigure(1, weight=1)
         decoy_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            decoy_frame, text="Active Deception Traps",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            decoy_frame, text="DEPLOYED DECOY ASSETS",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(16, 8))
 
-        self.decoy_box = ctk.CTkTextbox(
-            decoy_frame, fg_color="#0a0c10", text_color=C_TEXT,
-            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
-        )
-        self.decoy_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
+        self.decoy_scroll = ctk.CTkScrollableFrame(decoy_frame, fg_color="transparent")
+        self.decoy_scroll.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.decoy_scroll.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkButton(
-            decoy_frame, text="Deploy / Refresh Decoys",
+        deploy_btn = ctk.CTkButton(
+            decoy_frame, text="⚡ DEPLOY / REFRESH TRAPS",
             command=self._deploy_decoys,
-            fg_color=C_ACCENT, hover_color="#009fcc", text_color="#000000",
-            corner_radius=8
-        ).grid(row=2, column=0, padx=12, pady=(0, 12), sticky="ew")
+            fg_color=C_SURFACE, hover_color=C_BORDER, text_color=C_ACCENT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"),
+            border_width=1, border_color=C_BORDER,
+            corner_radius=6, height=36
+        )
+        deploy_btn.grid(row=2, column=0, padx=16, pady=(0, 16), sticky="ew")
+        CyberAnimator.apply_button_hover(deploy_btn, C_SURFACE, C_BORDER)
 
-        # --- Right: interaction log ---
-        log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
-        log_frame.grid(row=1, column=1, padx=(6, 12), pady=12, sticky="nsew")
+        # --- Right: interaction structured feed ---
+        log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=12, border_width=1, border_color=C_BORDER)
+        log_frame.grid(row=2, column=1, padx=(8, 16), pady=(0, 16), sticky="nsew")
         log_frame.grid_rowconfigure(1, weight=1)
         log_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            log_frame, text="Attacker Interaction Log (Honeypot Intel)",
-            font=ctk.CTkFont(size=14, weight="bold"), text_color=C_TEXT
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+            log_frame, text="ATTACKER INTERCEPTION FEED (SOC INTEL)",
+            font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(16, 8))
 
-        self.interaction_box = ctk.CTkTextbox(
-            log_frame, fg_color="#0a0c10", text_color=C_TEXT,
-            font=ctk.CTkFont(family="Courier New", size=11), state="disabled"
+        self.interaction_scroll = ctk.CTkScrollableFrame(log_frame, fg_color="transparent")
+        self.interaction_scroll.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.interaction_scroll.grid_columnconfigure(0, weight=1)
+
+        refresh_log_btn = ctk.CTkButton(
+            log_frame, text="🔄 REFRESH INTEL FEED",
+            command=self._refresh_data,
+            fg_color=C_SURFACE, hover_color=C_BORDER, text_color=C_SUBTEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11),
+            border_width=1, border_color=C_BORDER,
+            corner_radius=6, height=36
         )
-        self.interaction_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
+        refresh_log_btn.grid(row=2, column=0, padx=16, pady=(0, 16), sticky="ew")
+        CyberAnimator.apply_button_hover(refresh_log_btn, C_SURFACE, C_BORDER)
 
-        # ML adapter status
-        ml_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10)
-        ml_frame.grid(row=2, column=0, columnspan=2, padx=12, pady=(0, 12), sticky="ew")
-        ctk.CTkLabel(
-            ml_frame,
-            text="ML Adapter: Adapts decoy realism based on attacker behavior  |  Status: ACTIVE (Phase 4)",
-            font=ctk.CTkFont(size=11), text_color=C_SUCCESS
-        ).pack(padx=16, pady=10)
-
-    def _card(self, col: int, title: str, value: str, color: str):
-        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, height=80)
-        card.grid(row=0, column=col,
-                  padx=(12 if col == 0 else 6, 6 if col == 0 else 12),
-                  pady=(12, 6), sticky="ew")
+    def _card(self, col: int, title: str, value: str, color: str, subtitle: str):
+        card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, height=86, border_width=1, border_color=C_BORDER)
+        card.grid(row=1, column=col,
+                  padx=(16 if col == 0 else 8, 8 if col == 0 else 16),
+                  pady=(0, 16), sticky="ew")
         card.grid_propagate(False)
-        ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=11),
+        ctk.CTkLabel(card, text=title.upper(), font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"),
                      text_color=C_SUBTEXT).place(x=16, y=10)
-        val_lbl = ctk.CTkLabel(card, text=value, font=ctk.CTkFont(size=22, weight="bold"),
+        val_lbl = ctk.CTkLabel(card, text=value, font=ctk.CTkFont(family=FONT_MONO, size=16, weight="bold"),
                                text_color=color)
         val_lbl.place(x=16, y=32)
+        ctk.CTkLabel(card, text=subtitle, font=ctk.CTkFont(family=FONT_MONO, size=9),
+                     text_color=C_SUBTEXT).place(x=16, y=58)
         return card, val_lbl
 
     def _deploy_decoys(self):
@@ -115,20 +121,47 @@ class HoneypotTab(ctk.CTkFrame):
         self._refresh_data()
 
     def _refresh_data(self):
-        # Decoys
+        # Clear decoys UI
+        for w in self.decoy_scroll.winfo_children():
+            w.destroy()
+
         decoys = self.decoy_mgr.get_active_decoys()
-        self.decoy_box.configure(state="normal")
-        self.decoy_box.delete("1.0", "end")
         for d in decoys:
-            self.decoy_box.insert("end", f"🍯 [TRAP] {d.name}\n    Path: {d}\n\n")
-        self.decoy_box.configure(state="disabled")
+            item = ctk.CTkFrame(self.decoy_scroll, fg_color=C_SURFACE, corner_radius=6, border_width=1, border_color=C_BORDER)
+            item.pack(fill="x", pady=3)
+            
+            ctk.CTkLabel(
+                item, text=f"🍯 {d.name}",
+                font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_ACCENT
+            ).pack(side="left", padx=12, pady=10)
+
+            ctk.CTkLabel(
+                item, text="TRAP ACTIVE",
+                font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"), text_color=C_SUCCESS
+            ).pack(side="right", padx=12, pady=10)
+
         self.decoy_val_lbl.configure(text=str(len(decoys)))
 
-        # Interactions
+        # Clear interactions UI
+        for w in self.interaction_scroll.winfo_children():
+            w.destroy()
+
         logs = self.interaction_logger.get_recent_interactions(50)
-        self.interaction_box.configure(state="normal")
-        self.interaction_box.delete("1.0", "end")
-        for l in logs:
-            self.interaction_box.insert("end", f"{l}\n")
-        self.interaction_box.configure(state="disabled")
-        self.diverted_val_lbl.configure(text=str(len(logs)))
+        if not logs or logs[0].startswith("No attacker"):
+            empty_lbl = ctk.CTkLabel(
+                self.interaction_scroll, text="No attacker interactions intercepted yet.\nTest by visiting gateway from external IP.",
+                font=ctk.CTkFont(family=FONT_BODY, size=11), text_color=C_SUBTEXT
+            )
+            empty_lbl.pack(pady=20)
+        else:
+            for l in logs:
+                item = ctk.CTkFrame(self.interaction_scroll, fg_color=C_SURFACE, corner_radius=6, border_width=1, border_color=C_BORDER)
+                item.pack(fill="x", pady=3)
+                
+                ctk.CTkLabel(
+                    item, text=l,
+                    font=ctk.CTkFont(family=FONT_MONO, size=10), text_color=C_TEXT,
+                    justify="left", anchor="w"
+                ).pack(side="left", padx=12, pady=10, fill="x", expand=True)
+
+        self.diverted_val_lbl.configure(text=str(len(logs) if not logs[0].startswith("No") else 0))
