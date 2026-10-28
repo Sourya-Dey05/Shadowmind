@@ -293,12 +293,10 @@ class DashboardTab(ctk.CTkFrame):
                     except Exception as ev_err:
                         self.after(0, lambda err=ev_err: self._append_log(f"External vault encrypt error: {err}"))
 
-                    # Record breach telemetry in global AppSettings for Settings Tab audit inspection
+                    # Generate Threat Intelligence Dossier and Auto-Generate Forensic Incident Report!
                     try:
-                        from src.utils.settings_state import AppSettings
-                        AppSettings.record_exfil(source_ip, f"CONFIRMED EXFILTRATION (Score: {score})")
-                    except Exception:
-                        pass
+                        from src.intelligence.profiler import AttackerProfiler
+                        from src.intelligence.reporter import IncidentReporter
                         
                         dossier = AttackerProfiler.profile_ip(source_ip)
                         loc_str = dossier.get('geo_location', 'Local Subnet')
@@ -311,7 +309,7 @@ class DashboardTab(ctk.CTkFrame):
                             "Diverted attacker into Dynamic Honeypot trap share."
                         ]
                         report_path = IncidentReporter().generate_report(dossier, actions)
-                        self.after(0, lambda p=report_path: self._append_log(f"📄 FORENSIC REPORT GENERATED: {p.name}"))
+                        self.after(0, lambda p=report_path: self._append_log(f"FORENSIC REPORT GENERATED: {p.name}"))
                     except Exception as prof_err:
                         pass
                 else:
