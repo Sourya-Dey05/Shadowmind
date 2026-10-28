@@ -41,6 +41,10 @@ class SettingsTab(ctk.CTkFrame):
             self.cfg = yaml.safe_load(f)
         self._build()
 
+    def tkraise(self, above_this=None):
+        super().tkraise(above_this)
+        self._refresh_audit_display()
+
     def _build(self):
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -50,28 +54,11 @@ class SettingsTab(ctk.CTkFrame):
         left.grid(row=0, column=0, padx=(12, 6), pady=12, sticky="nsew")
         left.grid_columnconfigure(0, weight=1)
 
-        self._section(left, 0, "Appearance & UI")
-        
-        # 1. Light Mode / Dark Mode Option
-        theme_card = ctk.CTkFrame(left, fg_color=C_PANEL, corner_radius=6, border_width=1, border_color=C_BORDER)
-        theme_card.grid(row=1, column=0, sticky="ew", padx=4, pady=4)
-        theme_card.grid_columnconfigure(1, weight=1)
-        ctk.CTkLabel(theme_card, text="Interface Theme", font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_SUBTEXT).grid(row=0, column=0, padx=12, pady=10, sticky="w")
-        
-        self.theme_menu = ctk.CTkOptionMenu(
-            theme_card, values=["Dark", "Light"],
-            command=self._on_theme_changed,
-            fg_color=C_SURFACE, button_color=C_ACCENT, button_hover_color="#38d4ff",
-            text_color=C_TEXT, font=ctk.CTkFont(family=FONT_MONO, size=11)
-        )
-        self.theme_menu.set(AppSettings.theme_mode)
-        self.theme_menu.grid(row=0, column=1, padx=12, pady=10, sticky="e")
+        self._section(left, 0, "Telemetry & Detection Filtering")
 
-        self._section(left, 2, "Telemetry & Detection Filtering")
-
-        # 2. Turn on/off signal detection every 2s (Attack Only vs All)
+        # Turn on/off signal detection every 2s (Attack Only vs All)
         signal_card = ctk.CTkFrame(left, fg_color=C_PANEL, corner_radius=6, border_width=1, border_color=C_BORDER)
-        signal_card.grid(row=3, column=0, sticky="ew", padx=4, pady=4)
+        signal_card.grid(row=1, column=0, sticky="ew", padx=4, pady=4)
         signal_card.grid_columnconfigure(1, weight=1)
         ctk.CTkLabel(signal_card, text="Signal Display Mode", font=ctk.CTkFont(family=FONT_MONO, size=11), text_color=C_SUBTEXT).grid(row=0, column=0, padx=12, pady=10, sticky="w")
         
@@ -84,11 +71,11 @@ class SettingsTab(ctk.CTkFrame):
         self.signal_menu.set(AppSettings.signal_mode)
         self.signal_menu.grid(row=0, column=1, padx=12, pady=10, sticky="e")
 
-        self._section(left, 4, "System Thresholds Reference")
+        self._section(left, 2, "System Thresholds Reference")
         d = self.cfg["detection"]["risk_score"]
-        self._row(left, 5, "Benign max score",      str(d["benign_max"]))
-        self._row(left, 6, "Suspicious min score",  str(d["suspicious_min"]))
-        self._row(left, 7, "Confirmed min score",   str(d["confirmed_min"]))
+        self._row(left, 3, "Benign max score",      str(d["benign_max"]))
+        self._row(left, 4, "Suspicious min score",  str(d["suspicious_min"]))
+        self._row(left, 5, "Confirmed min score",   str(d["confirmed_min"]))
 
         # --- Right column: Last Exfiltration Telemetry Inspector ---
         right = ctk.CTkScrollableFrame(self, fg_color=C_BG)
