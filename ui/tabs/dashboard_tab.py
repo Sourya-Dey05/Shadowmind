@@ -13,19 +13,7 @@ import numpy as np
 from src.auth.auth import Session
 from src.detection.engine import DetectionEngine
 
-from ui.theme import (
-    COLOR_BG as C_BG,
-    COLOR_CARD as C_PANEL,
-    COLOR_CYAN as C_ACCENT,
-    COLOR_SUCCESS as C_SUCCESS,
-    COLOR_WARNING as C_WARNING,
-    COLOR_DANGER as C_DANGER,
-    COLOR_TEXT_PRIMARY as C_TEXT,
-    COLOR_TEXT_SECONDARY as C_SUBTEXT,
-    COLOR_BORDER as C_BORDER,
-    COLOR_SURFACE as C_SURFACE,
-    FONT_BRAND, FONT_MONO, FONT_BODY
-)
+from ui.widgets.scrollable_log import InteractiveLogViewer
 
 
 class DashboardTab(ctk.CTkFrame):
@@ -103,17 +91,13 @@ class DashboardTab(ctk.CTkFrame):
             font=ctk.CTkFont(family=FONT_MONO, size=10, weight="bold"), text_color=C_SUCCESS
         ).grid(row=0, column=1, sticky="e")
 
-        self.log_box = ctk.CTkTextbox(
-            log_frame, fg_color="#05070a", text_color=C_TEXT,
-            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
-            border_width=1, border_color=C_BORDER, corner_radius=6
-        )
+        self.log_box = InteractiveLogViewer(log_frame, corner_radius=6, border_width=1, border_color=C_BORDER)
         self.log_box.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="nsew")
-        self._append_log("ShadowMind started.")
-        self._append_log(f"Logged in as: {self.session.username} [{self.session.role.value}]")
-        self._append_log("Detection Engine: LOADED (Phase 1)")
-        self._append_log("Vault: Standby (Phase 3)")
-        self._append_log("Honeypot: Standby (Phase 4)")
+        self._append_log("ShadowMind started.", "INFO")
+        self._append_log(f"Logged in as: {self.session.username} [{self.session.role.value}]", "INFO")
+        self._append_log("Detection Engine: LOADED (Phase 1)", "INFO")
+        self._append_log("Vault: Standby (Phase 3)", "INFO")
+        self._append_log("Honeypot: Standby (Phase 4)", "INFO")
 
     def _status_card(self, col: int, title: str, value: str, color: str, subtitle: str = ""):
         card = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=10, height=86, border_width=1, border_color=C_BORDER)
@@ -133,14 +117,18 @@ class DashboardTab(ctk.CTkFrame):
 
         return card, val_lbl
 
-    def _append_log(self, msg: str):
+    def _append_log(self, msg: str, level: str = "INFO"):
         import datetime
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         try:
-            self.log_box.configure(state="normal")
-            self.log_box.insert("end", f"[{ts}] {msg}\n")
-            self.log_box.configure(state="disabled")
-            self.log_box.see("end")
+            # Auto-detect level if not explicitly provided
+            if level == "INFO":
+                if any(kw in msg.upper() for kw in ["ALERT", "ATTACK", "CONFIRMED", "BREACH", "EXFILTRATION", "ROTA"]):
+                    level = "ALERT"
+                elif any(kw in msg.upper() for kw in ["WARN", "SUSPICIOUS", "INTEL"]):
+                    level = "WARN"
+
+            self.log_box.append_log(f"[{ts}] {msg}", level)
         except Exception:
             pass
 
