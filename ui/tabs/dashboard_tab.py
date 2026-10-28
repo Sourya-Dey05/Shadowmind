@@ -322,6 +322,10 @@ class DashboardTab(ctk.CTkFrame):
                     score = round(0.0010 + (raw_score % 0.34), 4)
                     label = "BENIGN"
 
+                from src.utils.settings_state import AppSettings
+                if AppSettings.signal_mode == "Attack Only (Hide Benign)" and not attack_detected:
+                    continue
+
                 color = C_SUCCESS
                 if label == "SUSPICIOUS":
                     color = C_WARNING
@@ -334,9 +338,12 @@ class DashboardTab(ctk.CTkFrame):
 
     def _update_ui_score(self, score: float, label: str, color: str):
         try:
-            self.score_display_label.configure(text=f"Score: {score:.4f} [{label}]", text_color=color)
-            self.threat_label.configure(text=label.split()[0], text_color=color)
-            self._append_log(f"Traffic evaluated — Score: {score:.4f} | Status: {label}")
+            self.score_display_label.configure(text=f"{score:.4f} [{label}]", text_color=color)
+            self.threat_label.configure(text=label, text_color=color)
+            
+            from src.utils.settings_state import AppSettings
+            if label != "BENIGN" or AppSettings.signal_mode == "Attack & Benign":
+                self._append_log(f"Traffic evaluated — Score: {score:.4f} | Status: {label}")
         except Exception:
             pass
 
