@@ -9,6 +9,7 @@ import customtkinter as ctk
 from src.auth.auth import Session
 from src.honeypot.decoy_manager import DecoyManager
 from src.honeypot.interaction_log import InteractionLogger
+from ui.widgets.scrollable_log import InteractiveLogViewer
 from ui.animations import CyberAnimator
 
 from ui.theme import (
@@ -86,11 +87,8 @@ class HoneypotTab(ctk.CTkFrame):
             font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(16, 8))
 
-        self.interaction_box = ctk.CTkTextbox(
-            log_frame, fg_color="#05070a", text_color=C_TEXT,
-            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
-            border_width=1, border_color=C_BORDER, corner_radius=6,
-            wrap="none"
+        self.interaction_box = InteractiveLogViewer(
+            log_frame, corner_radius=6, border_width=1, border_color=C_BORDER
         )
         self.interaction_box.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 12))
 
@@ -146,15 +144,13 @@ class HoneypotTab(ctk.CTkFrame):
 
         self.decoy_val_lbl.configure(text=str(len(decoys)))
 
-        # Update interactions UI using interaction_box textbox
         logs = self.interaction_logger.get_recent_interactions(50)
-        self.interaction_box.configure(state="normal")
-        self.interaction_box.delete("1.0", "end")
-        if not logs:
-            self.interaction_box.insert("end", "No attacker interactions intercepted yet.\n")
+        self.interaction_box.clear()
+        if not logs or (len(logs) == 1 and logs[0].startswith("No")):
+            self.interaction_box.append_log("No attacker interactions intercepted yet.", "INFO")
         else:
             for l in logs:
-                self.interaction_box.insert("end", f"{l}\n")
-        self.interaction_box.configure(state="disabled")
+                lvl = "ALERT" if "REDIRECT" in l.upper() or "DOWNLOAD" in l.upper() else "INFO"
+                self.interaction_box.append_log(l, lvl)
 
         self.diverted_val_lbl.configure(text=str(len(logs) if not (len(logs) == 1 and logs[0].startswith("No")) else 0))
