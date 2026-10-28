@@ -54,6 +54,17 @@ graph TD
 ## Key Features & Pillars
 
 1. **AI Detection Engine:** 3-way neural network ensemble (Spatial 1D CNN, Temporal LSTM, and PyTorch Geometric HoneyGraph GNN) achieving **99.96% accuracy** on CICIDS2017 flow data.
+   - **Evaluation Metrics:**
+     - **Accuracy:** `99.96%`
+     - **Precision:** `0.9992`
+     - **Recall:** `1.0000`
+     - **F1-Score:** `0.9996`
+     - **Confusion Matrix:**
+       ```
+                      Predicted Benign    Predicted Malicious
+       Actual Benign         2,369                   2
+       Actual Malicious          0               2,381
+       ```
 2. **Physical Local Storage Vault (`/Vault` folder):** Automatically creates a physical folder on startup where users work normally in plaintext; instantly auto-encrypts files into `.enc` ciphertext upon breach detection.
 3. **Poison Pill Vault:** AES-256 Fernet encryption with keys held exclusively in RAM. Executes emergency re-encryption in < 50ms, rendering stolen ciphertext permanently invalid.
 4. **Dynamic Honeypot & Threat Intelligence:** Deploys interactive decoy shares (`aws_production_keys.env`, `financial_passwords.xlsx`), logs attacker IP addresses, and profiles infrastructure via geolocation/ASN lookup.
