@@ -121,6 +121,11 @@ Shadowmind/
 
 ## Installation and Setup
 
+### Option A: Using the Standalone Executable (Recommended for Demo)
+1. Download **`ShadowMind.exe`** from the [GitHub Releases Page](https://github.com/Sourya-Dey05/Shadowmind/releases/tag/v1.0.0).
+2. Double-click `ShadowMind.exe` directly. No Python installation, virtual environment, or `pip install` required!
+
+### Option B: Running from Source Code (For Developers)
 1. **Clone the Repository:**
    ```bash
    git clone https://github.com/Sourya-Dey05/Shadowmind.git
@@ -141,16 +146,26 @@ Shadowmind/
 
 ---
 
-## Running the Project
+## Running the Application
 
-Launch the desktop security application:
-```powershell
-python main.py
-```
+### 1. Launching the Software
+- **If running from source:**
+  ```powershell
+  python main.py
+  ```
+- **If running the standalone binary:** Double-click `ShadowMind.exe`.
 
-- **Operator Login:** 
-  - **Email:** `souryanew@shadowmind.com`
-  - **Password:** `Sourya@2026dey`
+### 2. Operator Authentication
+When the login terminal appears, sign in with your administrator credentials:
+- **Operator Email:** `souryanew@shadowmind.com`
+- **Password:** `Sourya@2026dey`
+
+### 3. Navigating the Command Center
+Once authenticated, you have access to four primary control tabs:
+- **Dashboard:** Real-time AI threat scoring (Spatial CNN + Temporal LSTM + HoneyGraph GNN), live threat metrics, and interactive event logs.
+- **File Vault & Workspace:** Monitors the physical local `/Vault` folder (`D:\Shadowmind\Vault`) where plaintext files are auto-encrypted into `.enc` ciphertext upon attack detection. Includes decryption tools and emergency key rotation (`ROTATE KEY NOW`).
+- **Honeypot:** Displays active deployed deception traps and live attacker interception intel feeds.
+- **Settings:** Configures detection filtering modes ("Attack Only" vs. "Attack & Benign") and reviews exfiltration breach audit history.
 
 ---
 
