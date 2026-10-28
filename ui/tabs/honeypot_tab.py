@@ -75,7 +75,7 @@ class HoneypotTab(ctk.CTkFrame):
         deploy_btn.grid(row=2, column=0, padx=16, pady=(0, 16), sticky="ew")
         CyberAnimator.apply_button_hover(deploy_btn, C_SURFACE, C_BORDER)
 
-        # --- Right: interaction structured feed ---
+        # --- Right: interaction log (using CTkTextbox with wrap="none" for horizontal scrolling) ---
         log_frame = ctk.CTkFrame(self, fg_color=C_PANEL, corner_radius=12, border_width=1, border_color=C_BORDER)
         log_frame.grid(row=2, column=1, padx=(8, 16), pady=(0, 16), sticky="nsew")
         log_frame.grid_rowconfigure(1, weight=1)
@@ -86,9 +86,13 @@ class HoneypotTab(ctk.CTkFrame):
             font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_TEXT
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(16, 8))
 
-        self.interaction_scroll = ctk.CTkScrollableFrame(log_frame, fg_color="transparent")
-        self.interaction_scroll.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
-        self.interaction_scroll.grid_columnconfigure(0, weight=1)
+        self.interaction_box = ctk.CTkTextbox(
+            log_frame, fg_color="#05070a", text_color=C_TEXT,
+            font=ctk.CTkFont(family=FONT_MONO, size=11), state="disabled",
+            border_width=1, border_color=C_BORDER, corner_radius=6,
+            wrap="none"
+        )
+        self.interaction_box.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 12))
 
         refresh_log_btn = ctk.CTkButton(
             log_frame, text="🔄 REFRESH INTEL FEED",
@@ -142,26 +146,15 @@ class HoneypotTab(ctk.CTkFrame):
 
         self.decoy_val_lbl.configure(text=str(len(decoys)))
 
-        # Clear interactions UI
-        for w in self.interaction_scroll.winfo_children():
-            w.destroy()
-
+        # Update interactions UI using interaction_box textbox
         logs = self.interaction_logger.get_recent_interactions(50)
-        if not logs or logs[0].startswith("No attacker"):
-            empty_lbl = ctk.CTkLabel(
-                self.interaction_scroll, text="No attacker interactions intercepted yet.\nTest by visiting gateway from external IP.",
-                font=ctk.CTkFont(family=FONT_BODY, size=11), text_color=C_SUBTEXT
-            )
-            empty_lbl.pack(pady=20)
+        self.interaction_box.configure(state="normal")
+        self.interaction_box.delete("1.0", "end")
+        if not logs:
+            self.interaction_box.insert("end", "No attacker interactions intercepted yet.\n")
         else:
             for l in logs:
-                item = ctk.CTkFrame(self.interaction_scroll, fg_color=C_SURFACE, corner_radius=6, border_width=1, border_color=C_BORDER)
-                item.pack(fill="x", pady=3)
-                
-                ctk.CTkLabel(
-                    item, text=l,
-                    font=ctk.CTkFont(family=FONT_MONO, size=10), text_color=C_TEXT,
-                    justify="left", anchor="w"
-                ).pack(side="left", padx=12, pady=10, fill="x", expand=True)
+                self.interaction_box.insert("end", f"{l}\n")
+        self.interaction_box.configure(state="disabled")
 
-        self.diverted_val_lbl.configure(text=str(len(logs) if not logs[0].startswith("No") else 0))
+        self.diverted_val_lbl.configure(text=str(len(logs) if not (len(logs) == 1 and logs[0].startswith("No")) else 0))
