@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.auth.auth import login, logout, require_role, bootstrap_admin, Role, Session
+from src.auth.otp import OTPManager
 from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.vault_tab import VaultTab
 from ui.tabs.honeypot_tab import HoneypotTab
@@ -209,14 +210,26 @@ class LoginFrame(ctk.CTkFrame):
 
     def _do_login(self, username: str, password: str):
         session = login(username, password)
-        self.login_btn.configure(state="normal", text="Login")
+        self.login_btn.configure(state="normal", text="INITIALIZE SECURE SESSION")
 
         if session is None:
             self._show_error("Invalid credentials or account locked")
-            self.password_var.set("")  # clear password field on failure
+            self.password_var.set("")
         else:
             self.error_label.configure(text="")
-            self.on_login_success(session)
+            # Trigger 2FA OTP prompt step
+            otp_code = OTPManager.generate_otp()
+            
+            # Prompt user for OTP via CTkInputDialog or simpledialog
+            from tkinter import simpledialog
+            entered_otp = simpledialog.askstring("Two-Factor Authentication", "🔒 Security 2FA\nEnter the 6-digit OTP code sent to your secure terminal (check console):")
+            
+            if entered_otp and OTPManager.verify_otp(entered_otp):
+                messagebox.showinfo("2FA Verified", "Secure 2FA token validated. Enclave unlocked.")
+                self.on_login_success(session)
+            else:
+                messagebox.showerror("2FA Failed", "Invalid or expired OTP verification code. Access denied.")
+                self.password_var.set("")
 
     def _show_error(self, msg: str):
         self.error_label.configure(text=msg)
