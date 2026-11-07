@@ -4,30 +4,36 @@
 #          from the Figma design specification in Section 1.pdf.
 # =============================================================================
 
-# Primary Background & Surface Palette — OLED Museum Dark
-COLOR_BG            = "#050608"   # Deepest OLED Black
-COLOR_SURFACE       = "#0B0E14"   # Elevated Glass Surface
-COLOR_CARD          = "#0F131D"   # Frosted Card Container
-COLOR_CARD_HOVER    = "#151B28"   # Interactive Card Hover
-COLOR_BORDER        = "#1F293D"   # Crisp Structural Border
-COLOR_BORDER_FOCUS  = "#00E5FF"   # Electric Cyan Focus Ring
+# =============================================================================
+# FILE: ui/theme.py
+# PURPOSE: Google Stitch Design System tokens & palette (Enterprise Security Console).
+#          Modular surface zoning, precision elevation layers, and high-contrast telemetry.
+# =============================================================================
 
-# Brand & Accent Tokens
-COLOR_CYAN          = "#00E5FF"   # Electric Neon Cyan
-COLOR_CYAN_DIM      = "#008399"   # Muted Cyber Cyan
-COLOR_CYAN_GLOW     = "#003642"   # Glow Backdrop
+# Primary Surface Stitching Palette (Google Cloud Security inspired)
+COLOR_BG            = "#0e1116"   # Deep Foundation Canvas
+COLOR_SURFACE       = "#161b22"   # Segmented Surface Stitch
+COLOR_CARD          = "#1f242c"   # Modular Card Enclave
+COLOR_CARD_HOVER    = "#262c38"   # Interactive Stitch Hover
+COLOR_BORDER        = "#30363d"   # Precision Structural Border
+COLOR_BORDER_FOCUS  = "#42a5f5"   # Google Blue Focus Ring
+
+# Brand & Accent Tokens (Google Stitch Palette)
+COLOR_CYAN          = "#26a69a"   # Google Teal Accent
+COLOR_CYAN_DIM      = "#00695c"   # Muted Teal
+COLOR_CYAN_GLOW     = "#004d40"   # Glow Backdrop
 
 # State Tokens
-COLOR_SUCCESS       = "#00FF66"   # Neon Matrix Green
-COLOR_WARNING       = "#FFB800"   # Amber Warning
-COLOR_DANGER        = "#FF2E2E"   # Crimson Alert Red
-COLOR_PURPLE        = "#B026FF"   # Enclave Tag
+COLOR_SUCCESS       = "#66bb6a"   # Emerald Green (Healthy / Benign)
+COLOR_WARNING       = "#ffa726"   # Amber Warning
+COLOR_DANGER        = "#ef5350"   # Material Red (Threat / Breach)
+COLOR_PURPLE        = "#ab47bc"   # Enclave Tag
 
 # Text Hierarchy
-COLOR_TEXT_PRIMARY   = "#FFFFFF"  # Pure White Headings
-COLOR_TEXT_SECONDARY = "#A0AEC0"  # Crisp Slate Subtitles
-COLOR_TEXT_MUTED     = "#718096"  # Subtle Meta / Timestamps
-COLOR_TEXT_DIM       = "#4A5568"  # Dividers
+COLOR_TEXT_PRIMARY   = "#f0f6fc"  # Pure White Headings
+COLOR_TEXT_SECONDARY = "#8b949e"  # Crisp Slate Subtitles
+COLOR_TEXT_MUTED     = "#6e7681"  # Subtle Meta / Timestamps
+COLOR_TEXT_DIM       = "#21262d"  # Dividers
 
 # Fonts
 FONT_TITLE  = "Segoe UI"
