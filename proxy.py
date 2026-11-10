@@ -13,20 +13,19 @@ import urllib.request
 import sys
 
 # --- CONFIGURE THESE BEFORE RUNNING ON PHONE 2 ---
-LAPTOP_IP = "192.168.29.250"  # Your laptop's Wi-Fi IPv4 address
-PORT = 8080                 # ShadowMind listener port
-LISTEN_PORT = 9000          # Port Phone 2 listens on for attacker traffic
+TARGET_HOST = "https://recorded-pepper-lender-fill.trycloudflare.com"  # Cloudflare public tunnel URL
+LISTEN_PORT = 9000                                                   # Port Phone 2 listens on for attacker traffic
 
 class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        target_url = f"http://{LAPTOP_IP}:{PORT}{self.path}"
+        target_url = f"{TARGET_HOST}{self.path}"
         attacker_ip = self.client_address[0]
         
         print(f"[HOP 2 PROXY] Intercepted attack request from Attacker IP: {attacker_ip}")
         print(f"[HOP 2 PROXY] Relaying payload to Target Vault: {target_url}")
 
         # Inject X-Forwarded-For header so ShadowMind traces the multi-hop route
-        headers = {"X-Forwarded-For": attacker_ip}
+        headers = {"X-Forwarded-For": attacker_ip, "User-Agent": "ShadowMind-ProxyRelay"}
         req = urllib.request.Request(target_url, headers=headers)
 
         try:
@@ -52,7 +51,7 @@ if __name__ == "__main__":
     print("=" * 65)
     print(f" SHADOWMIND MULTI-HOP PROXY RELAY (Phone 2)")
     print(f" Listening on port {LISTEN_PORT}...")
-    print(f" Forwarding multi-hop traffic to Laptop Vault -> {LAPTOP_IP}:{PORT}")
+    print(f" Forwarding multi-hop traffic to Target Vault -> {TARGET_HOST}")
     print("=" * 65)
     try:
         httpd.serve_forever()
