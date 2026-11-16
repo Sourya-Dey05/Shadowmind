@@ -13,7 +13,7 @@ import urllib.request
 import sys
 
 # --- CONFIGURE THESE BEFORE RUNNING ON PHONE 2 ---
-TARGET_HOST = "https://recorded-pepper-lender-fill.trycloudflare.com"  # Cloudflare public tunnel URL
+TARGET_HOST = "https://when-point-triple-ticket.trycloudflare.com"  # Cloudflare public tunnel URL
 LISTEN_PORT = 9000                                                   # Port Phone 2 listens on for attacker traffic
 
 class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
