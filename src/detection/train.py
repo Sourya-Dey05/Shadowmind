@@ -58,14 +58,21 @@ def train_model(epochs: int = 5, batch_size: int = 64, lr: float = 0.001):
     engine = DetectionEngine()
     engine.set_train_mode()
 
-    # Joint optimizer for cnn, lstm, mlp
+    # Joint optimizer for cnn, lstm, gnn, mlp
     optimizer = optim.Adam(
-        list(engine.cnn.parameters()) + list(engine.lstm.parameters()) + list(engine.mlp.parameters()),
+        list(engine.cnn.parameters()) + list(engine.lstm.parameters()) + list(engine.gnn.parameters()) + list(engine.mlp.parameters()),
         lr=lr
     )
     criterion = nn.BCELoss()
 
     logger.info(f"Starting training for {epochs} epochs on device: {engine.device}...")
+
+    if isinstance(engine.enterprise_graph, dict):
+        gx = engine.enterprise_graph["x"].to(engine.device)
+        gi = engine.enterprise_graph["edge_index"].to(engine.device)
+    else:
+        gx = engine.enterprise_graph.x.to(engine.device)
+        gi = engine.enterprise_graph.edge_index.to(engine.device)
 
     for epoch in range(epochs):
         total_loss = 0.0
@@ -81,7 +88,8 @@ def train_model(epochs: int = 5, batch_size: int = 64, lr: float = 0.001):
 
             cnn_emb = engine.cnn(batch_flat)
             lstm_emb = engine.lstm(batch_seq)
-            preds = engine.mlp(cnn_emb, lstm_emb)
+            gnn_emb = engine.gnn(gx, gi)
+            preds = engine.mlp(cnn_emb, lstm_emb, gnn_emb)
 
             loss = criterion(preds, batch_y)
             loss.backward()
@@ -105,7 +113,8 @@ def train_model(epochs: int = 5, batch_size: int = 64, lr: float = 0.001):
 
         c_emb = engine.cnn(t_flat)
         l_emb = engine.lstm(t_seq)
-        test_preds = engine.mlp(c_emb, l_emb)
+        g_emb = engine.gnn(gx, gi)
+        test_preds = engine.mlp(c_emb, l_emb, g_emb)
 
         test_labels = (test_preds >= 0.5).float()
         test_acc = (test_labels == t_y).sum().item() / len(t_y)

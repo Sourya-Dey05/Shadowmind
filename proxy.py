@@ -1,60 +1,120 @@
 # =============================================================================
 # FILE: proxy.py
-# PURPOSE: Multi-hop proxy relay script for Phone 2 (Device B / Termux).
-#          Acts as an intermediary "compromised internal workstation" that
-#          relays incoming HTTP traffic from an external attacker (Phone 1 /
-#          Device A) to the secure ShadowMind Vault server (Laptop / Device C),
-#          while preserving the attacker's original IP address in the
-#          X-Forwarded-For header so HoneyGraph GNN can trace the multi-hop path.
+# PURPOSE: Multi-Hop Intermediary Proxy Relay Script (For Phone running Python/Termux).
+#          Acts as the intermediate compromised relay node (Device B).
+#          Listens for attack probes from Laptop 2 (Attacker) and forwards
+#          them to Laptop 1 (Target ShadowMind Vault), injecting X-Forwarded-For
+#          and MultiHop telemetry so HoneyGraph GNN traces the multi-hop route.
+#
+# USAGE ON PHONE (Termux or Pydroid 3):
+#     python proxy.py [TARGET_URL] [PORT]
+# Example:
+#     python proxy.py https://your-laptop.trycloudflare.com 9000
 # =============================================================================
 
 import http.server
 import urllib.request
+import urllib.error
 import sys
+import socket
 
-# --- CONFIGURE THESE BEFORE RUNNING ON PHONE 2 ---
-TARGET_HOST = "https://when-point-triple-ticket.trycloudflare.com"  # Cloudflare public tunnel URL
-LISTEN_PORT = 9000                                                   # Port Phone 2 listens on for attacker traffic
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+# Laptop 1's Public Cloudflare / Pinggy Tunnel URL or Local LAN IP
+DEFAULT_TARGET_HOST = "https://your-tunnel.trycloudflare.com"
+DEFAULT_LISTEN_PORT = 9000
 
+TARGET_HOST = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TARGET_HOST
+LISTEN_PORT = int(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_LISTEN_PORT
+
+def get_phone_ip():
+    """Detect the phone's primary network IP address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+# =============================================================================
+# PROXY RELAY HANDLER
+# =============================================================================
 class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        target_url = f"{TARGET_HOST}{self.path}"
+        target_url = f"{TARGET_HOST.rstrip('/')}{self.path}"
         attacker_ip = self.client_address[0]
         
-        print(f"[HOP 2 PROXY] Intercepted attack request from Attacker IP: {attacker_ip}")
-        print(f"[HOP 2 PROXY] Relaying payload to Target Vault: {target_url}")
+        print(f"\n[HOP 2 RELAY] ➔ Intercepted Probe from Attacker IP: {attacker_ip}")
+        print(f"              Relaying to Target Vault : {target_url}")
 
-        # Inject X-Forwarded-For header so ShadowMind traces the multi-hop route
-        headers = {"X-Forwarded-For": attacker_ip, "User-Agent": "ShadowMind-ProxyRelay"}
+        # Inject Multi-Hop tracing headers for ShadowMind HoneyGraph GNN
+        headers = {
+            "User-Agent": "ShadowMind-ProxyRelay/2.0",
+            "X-Attack-Mode": "MultiHop",
+            "X-Forwarded-For": attacker_ip,
+            "Accept": "*/*"
+        }
+        
         req = urllib.request.Request(target_url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req)
-            self.send_response(resp.status)
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                payload = resp.read()
+                content_type = resp.headers.get("Content-Type", "application/octet-stream")
+                content_disp = resp.headers.get("Content-Disposition", "")
+                
+                self.send_response(resp.status)
+                self.send_header("Content-Type", content_type)
+                if content_disp:
+                    self.send_header("Content-Disposition", content_disp)
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+                print(f"[HOP 2 RELAY] ✓ Forwarded {len(payload):,} bytes back to Attacker (HTTP {resp.status})")
+                
+        except urllib.error.HTTPError as e:
+            err_body = e.read()
+            self.send_response(e.code)
+            self.send_header("Content-Type", "text/plain")
             self.end_headers()
-            self.wfile.write(resp.read())
-            print(f"[HOP 2 PROXY] Relay successful.\n")
+            self.wfile.write(err_body)
+            print(f"[HOP 2 RELAY] ⚠ Target returned HTTP {e.code}")
         except Exception as e:
-            print(f"[HOP 2 PROXY] Relay failed: {e}\n")
-            self.send_response(500)
+            print(f"[HOP 2 RELAY] ❌ Relay Error: {e}")
+            self.send_response(502)
+            self.send_header("Content-Type", "text/plain")
             self.end_headers()
-            self.wfile.write(str(e).encode())
+            self.wfile.write(f"Proxy Gateway Error connecting to {target_url}: {e}".encode("utf-8"))
 
     def log_message(self, format, *args):
-        # Keep terminal output clean
+        # Suppress default server log lines to keep output clean and readable
         return
 
 
+# =============================================================================
+# SERVER ENTRYPOINT
+# =============================================================================
 if __name__ == "__main__":
-    server_address = ('', LISTEN_PORT)
-    httpd = http.server.HTTPServer(server_address, MultiHopProxyHandler)
-    print("=" * 65)
-    print(f" SHADOWMIND MULTI-HOP PROXY RELAY (Phone 2)")
-    print(f" Listening on port {LISTEN_PORT}...")
-    print(f" Forwarding multi-hop traffic to Target Vault -> {TARGET_HOST}")
-    print("=" * 65)
+    local_ip = get_phone_ip()
+    server_address = ('0.0.0.0', LISTEN_PORT)
+    httpd = http.server.ThreadingHTTPServer(server_address, MultiHopProxyHandler)
+    
+    print("=" * 75)
+    print("  🌐 SHADOWMIND MULTI-HOP PROXY RELAY (Device B / Intermediate Node)")
+    print("=" * 75)
+    print(f" Proxy Listening IP: 0.0.0.0 (Phone Local IP: {local_ip})")
+    print(f" Proxy Listening Port: {LISTEN_PORT}")
+    print(f" Forwarding Upstream : {TARGET_HOST}")
+    print("=" * 75)
+    print(f"\n📡 On Laptop 2 (Attacker), run:")
+    print(f"   python multihop_attack.py http://{local_ip}:{LISTEN_PORT}\n")
+    print("⏳ Ready. Waiting for incoming attack requests...\n")
+    
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nProxy stopped.")
+        print("\n[!] Stopping Multi-Hop Proxy Relay...")
         httpd.server_close()

@@ -20,6 +20,8 @@ import numpy as np
 import yaml
 
 from src.detection.engine import DetectionEngine
+from src.honeypot.redirector import HoneypotRedirector
+from src.honeypot.decoy_manager import DecoyManager
 from src.vault.rotation import emergency_rotate_keys
 from src.vault.session_state import SessionState
 from src.vault.ttl_destruct import zero_wipe_ram_key

@@ -54,7 +54,7 @@ Classification: RESTRICTED // SOC EYES ONLY
 
 2. AI DETECTION & TOPOLOGY ANALYSIS (PHASE 1 & 2)
    - Detection Engine       : SpatialCNN + TemporalLSTM + HoneyGraph GNN
-   - Threat Classification  : CONFIRMED EXFILTRATION
+   - Threat Classification  : {dossier.get('threat_class', 'CONFIRMED EXFILTRATION')}
    - Model Confidence       : 99.96%
    - Topology Route         : External Gateway ➔ Port 8080 ➔ Local Enclave
 

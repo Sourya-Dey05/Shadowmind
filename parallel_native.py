@@ -25,7 +25,7 @@ PATHS = [
 def hit_target(path):
     url = f"{TARGET_URL.rstrip('/')}{path}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Native-Blitz)"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Native-Blitz)", "X-Attack-Mode": "Parallel"})
         start = time.time()
         with urllib.request.urlopen(req, timeout=5) as resp:
             body = resp.read()

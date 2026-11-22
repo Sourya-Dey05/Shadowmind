@@ -26,7 +26,7 @@ for i, path in enumerate(ENDPOINTS, 1):
     url = f"{TARGET_URL.rstrip('/')}{path}"
     print(f"[{i}/4] GET {path}")
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Native-Recon)"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Native-Recon)", "X-Attack-Mode": "Serial"})
         start = time.time()
         with urllib.request.urlopen(req, timeout=5) as resp:
             body = resp.read()

@@ -25,11 +25,13 @@ class AttackerProfiler:
 
     @classmethod
     def query_ipstack(cls, ip_address: str) -> dict:
-        """Query real IP metadata from ipstack API."""
+        """Query real IP metadata from ipstack API with zero-delay fallback when unconfigured."""
+        if not cls.API_KEY or cls.API_KEY == "YOUR_IPSTACK_API_KEY":
+            return {}
         try:
             url = f"http://api.ipstack.com/{ip_address}?access_key={cls.API_KEY}"
             req = urllib.request.Request(url, headers={'User-Agent': 'ShadowMind-Intel'})
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
                 data = json.loads(resp.read().decode())
                 if "success" in data and data["success"] is False:
                     return {}

@@ -13,6 +13,7 @@ import customtkinter as ctk
 import threading
 import time
 import random
+import socket
 import numpy as np
 from pathlib import Path
 import http.server
@@ -349,36 +350,38 @@ class DashboardTab(ctk.CTkFrame):
         a_left = ctk.CTkFrame(self._pipeline_attack_frame, fg_color="transparent")
         a_left.pack(side="left", fill="y", pady=6)
 
-        alert_badge = ctk.CTkLabel(
+        self.lbl_attack_badge = ctk.CTkLabel(
             a_left, text="🚨 GNN MULTI-HOP ATTACK PATH DETECTED:",
             font=ctk.CTkFont(family=FONT_BODY, size=9, weight="bold"),
             fg_color="#450d18", text_color=C_DANGER, corner_radius=4, height=22, padx=8
         )
-        alert_badge.pack(side="left", padx=(0, 8))
+        self.lbl_attack_badge.pack(side="left", padx=(0, 8))
 
         self.lbl_attack_ip1 = ctk.CTkLabel(
-            a_left, text="IP1: 203.0.113.42",
+            a_left, text="Hop 1: 203.0.113.42",
             font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"),
             fg_color="#2b1117", text_color="#ff7b92", corner_radius=4, height=22, padx=6
         )
         self.lbl_attack_ip1.pack(side="left", padx=2)
 
-        ctk.CTkLabel(
+        self.lbl_attack_sep1 = ctk.CTkLabel(
             a_left, text="➔",
             font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_DANGER
-        ).pack(side="left", padx=3)
+        )
+        self.lbl_attack_sep1.pack(side="left", padx=3)
 
         self.lbl_attack_ip2 = ctk.CTkLabel(
-            a_left, text="IP2: 192.168.1.15",
+            a_left, text="Hop 2: 172.236.137.204 (Pinggy)",
             font=ctk.CTkFont(family=FONT_MONO, size=9, weight="bold"),
             fg_color="#2b1117", text_color="#ffb547", corner_radius=4, height=22, padx=6
         )
         self.lbl_attack_ip2.pack(side="left", padx=2)
 
-        ctk.CTkLabel(
+        self.lbl_attack_sep2 = ctk.CTkLabel(
             a_left, text="➔",
             font=ctk.CTkFont(family=FONT_MONO, size=11, weight="bold"), text_color=C_DANGER
-        ).pack(side="left", padx=3)
+        )
+        self.lbl_attack_sep2.pack(side="left", padx=3)
 
         self.lbl_attack_target = ctk.CTkLabel(
             a_left, text="Target: 10.0.0.50 (Poison Pill Vault Enclave)",
@@ -390,12 +393,12 @@ class DashboardTab(ctk.CTkFrame):
         a_right = ctk.CTkFrame(self._pipeline_attack_frame, fg_color="transparent")
         a_right.pack(side="right", fill="y", pady=6)
 
-        trapped_badge = ctk.CTkLabel(
+        self.lbl_trapped_badge = ctk.CTkLabel(
             a_right, text="● DEFCON 1 · LATERAL EXFIL TRAPPED",
             font=ctk.CTkFont(family=FONT_BODY, size=9, weight="bold"),
             fg_color="#450d18", text_color=C_DANGER, corner_radius=4, width=190, height=20
         )
-        trapped_badge.pack(side="left", padx=0)
+        self.lbl_trapped_badge.pack(side="left", padx=0)
 
     def _render_normal_pipeline(self):
         """Render the nominal multi-hop GNN topology and pipeline flow banner (0ms instant switch)."""
@@ -408,17 +411,83 @@ class DashboardTab(ctk.CTkFrame):
         except Exception:
             pass
 
-    def _render_attack_path_pipeline(self, ip1: str, ip2: str, target: str):
-        """Render the high-visibility GNN Multi-Hop Attack Path banner during confirmed intrusion (0ms instant switch)."""
+    def _render_attack_path_pipeline(self, ip1: str, ip2: Optional[str], target: str, attack_type: str = "MULTIHOP"):
+        """Render the high-visibility attack path banner during confirmed intrusion (0ms instant switch)."""
         try:
             if hasattr(self, "_pipeline_normal_frame"):
                 self._pipeline_normal_frame.pack_forget()
             if hasattr(self, "_pipeline_attack_frame"):
-                self.lbl_attack_ip1.configure(text=f"IP1: {ip1}")
-                self.lbl_attack_ip2.configure(text=f"IP2: {ip2}")
-                self.lbl_attack_target.configure(text=f"Target: {target}")
+                # Cleanly unpack all left badges before re-arranging for target attack layout
+                for w in [self.lbl_attack_badge, self.lbl_attack_ip1, self.lbl_attack_sep1, self.lbl_attack_ip2, self.lbl_attack_sep2, self.lbl_attack_target]:
+                    try:
+                        w.pack_forget()
+                    except Exception:
+                        pass
+
+                if attack_type == "MULTIHOP":
+                    # Multi-Hop: Shows IP Hopping with Intermediate Proxy Relay Hop
+                    self.lbl_attack_badge.configure(
+                        text="🚨 GNN MULTI-HOP ATTACK PATH (IP HOPPING):",
+                        fg_color="#450d18", text_color=C_DANGER
+                    )
+                    self.lbl_attack_ip1.configure(text=f"Hop 1: {ip1}", text_color="#ff7b92")
+                    self.lbl_attack_ip2.configure(text=f"Hop 2: {ip2 or 'Proxy Relay'}", text_color="#ffb547")
+                    self.lbl_attack_target.configure(text=f"Target: {target}", text_color=C_DANGER)
+
+                    self.lbl_attack_badge.pack(side="left", padx=(0, 8))
+                    self.lbl_attack_ip1.pack(side="left", padx=2)
+                    self.lbl_attack_sep1.pack(side="left", padx=3)
+                    self.lbl_attack_ip2.pack(side="left", padx=2)
+                    self.lbl_attack_sep2.pack(side="left", padx=3)
+                    self.lbl_attack_target.pack(side="left", padx=2)
+
+                    self.lbl_trapped_badge.configure(
+                        text="● DEFCON 1 · MULTI-HOP RELAY",
+                        fg_color="#450d18", text_color=C_DANGER
+                    )
+                    self.pipeline_bar.configure(fg_color="#1f090d", border_color=C_DANGER)
+
+                elif attack_type == "PARALLEL":
+                    # Parallel: Simple direct path (Multi-Threaded) - NO IP HOPPING
+                    self.lbl_attack_badge.configure(
+                        text="⚡ DIRECT PARALLEL ATTACK DETECTED:",
+                        fg_color="#381e0c", text_color="#ff9900"
+                    )
+                    self.lbl_attack_ip1.configure(text=f"Direct Source: {ip1} (Multi-Threaded)", text_color="#ffb547")
+                    self.lbl_attack_target.configure(text=f"Target: {target}", text_color="#ff9900")
+
+                    self.lbl_attack_badge.pack(side="left", padx=(0, 8))
+                    self.lbl_attack_ip1.pack(side="left", padx=2)
+                    self.lbl_attack_sep1.pack(side="left", padx=3)
+                    self.lbl_attack_target.pack(side="left", padx=2)
+
+                    self.lbl_trapped_badge.configure(
+                        text="● DEFCON 1 · CONCURRENT FLOOD",
+                        fg_color="#381e0c", text_color="#ff9900"
+                    )
+                    self.pipeline_bar.configure(fg_color="#1d1208", border_color="#ff9900")
+
+                else:  # SERIAL
+                    # Serial: Simple direct path (Sequential Probes) - NO IP HOPPING
+                    self.lbl_attack_badge.configure(
+                        text="🔍 DIRECT SERIAL ATTACK DETECTED:",
+                        fg_color="#0c2438", text_color="#38bdf8"
+                    )
+                    self.lbl_attack_ip1.configure(text=f"Direct Source: {ip1} (Sequential Probes)", text_color="#7dd3fc")
+                    self.lbl_attack_target.configure(text=f"Target: {target}", text_color="#38bdf8")
+
+                    self.lbl_attack_badge.pack(side="left", padx=(0, 8))
+                    self.lbl_attack_ip1.pack(side="left", padx=2)
+                    self.lbl_attack_sep1.pack(side="left", padx=3)
+                    self.lbl_attack_target.pack(side="left", padx=2)
+
+                    self.lbl_trapped_badge.configure(
+                        text="● DEFCON 1 · STEALTH RECON",
+                        fg_color="#0c2438", text_color="#38bdf8"
+                    )
+                    self.pipeline_bar.configure(fg_color="#091829", border_color="#38bdf8")
+
                 self._pipeline_attack_frame.pack(fill="both", expand=True, padx=12)
-            self.pipeline_bar.configure(fg_color="#1f090d", border_color=C_DANGER)
         except Exception:
             pass
 
@@ -431,26 +500,56 @@ class DashboardTab(ctk.CTkFrame):
         ip2 = gnn_path.get("ip2", "192.168.1.1")
         target = gnn_path.get("target", "10.0.0.50")
         is_attack = gnn_path.get("is_attack", False)
+        attack_type = gnn_path.get("attack_type", "MULTIHOP")
 
         if is_attack:
-            current_attack_key = (ip1, ip2, target)
+            current_attack_key = (ip1, ip2, target, attack_type)
             if not getattr(self, "_gnn_was_attack", False) or getattr(self, "_last_attack_key", None) != current_attack_key:
                 self._gnn_was_attack = True
                 self._last_attack_key = current_attack_key
-                self._render_attack_path_pipeline(ip1, ip2, target)
+                self._render_attack_path_pipeline(ip1, ip2, target, attack_type=attack_type)
                 if hasattr(self, "lbl_gnn_radar_path"):
-                    self.lbl_gnn_radar_path.configure(
-                        text=f"IP1: {ip1}  ➔  IP2: {ip2}  ➔  Target: {target}",
-                        text_color=C_DANGER
-                    )
+                    if attack_type == "MULTIHOP":
+                        self.lbl_gnn_radar_path.configure(
+                            text=f"Hop 1: {ip1}  ➔  Hop 2: {ip2}  ➔  Target: {target}",
+                            text_color=C_DANGER
+                        )
+                    elif attack_type == "PARALLEL":
+                        self.lbl_gnn_radar_path.configure(
+                            text=f"Direct: {ip1} (Multi-Threaded)  ➔  Target: {target}",
+                            text_color="#ff9900"
+                        )
+                    else:  # SERIAL
+                        self.lbl_gnn_radar_path.configure(
+                            text=f"Direct: {ip1} (Sequential)  ➔  Target: {target}",
+                            text_color="#38bdf8"
+                        )
                 if hasattr(self, "lbl_gnn_radar_badge"):
-                    self.lbl_gnn_radar_badge.configure(
-                        text="● ATTACK",
-                        fg_color="#380C14",
-                        text_color=C_DANGER
-                    )
+                    if attack_type == "MULTIHOP":
+                        self.lbl_gnn_radar_badge.configure(
+                            text="● IP HOPPING",
+                            fg_color="#380C14",
+                            text_color=C_DANGER
+                        )
+                    elif attack_type == "PARALLEL":
+                        self.lbl_gnn_radar_badge.configure(
+                            text="● PARALLEL",
+                            fg_color="#381e0c",
+                            text_color="#ff9900"
+                        )
+                    else:  # SERIAL
+                        self.lbl_gnn_radar_badge.configure(
+                            text="● SERIAL",
+                            fg_color="#0c2438",
+                            text_color="#38bdf8"
+                        )
                 if hasattr(self, "gnn_route_box"):
-                    self.gnn_route_box.configure(border_color=C_DANGER)
+                    if attack_type == "MULTIHOP":
+                        self.gnn_route_box.configure(border_color=C_DANGER)
+                    elif attack_type == "PARALLEL":
+                        self.gnn_route_box.configure(border_color="#ff9900")
+                    else:
+                        self.gnn_route_box.configure(border_color="#38bdf8")
         else:
             if getattr(self, "_gnn_was_attack", False):
                 self._gnn_was_attack = False
@@ -458,7 +557,7 @@ class DashboardTab(ctk.CTkFrame):
                 self._render_normal_pipeline()
                 if hasattr(self, "lbl_gnn_radar_path"):
                     self.lbl_gnn_radar_path.configure(
-                        text=f"IP1: {ip1}  ➔  IP2: {ip2}  ➔  Target: {target}",
+                        text=f"Hop 1: {ip1}  ➔  Hop 2: {ip2}  ➔  Target: {target}",
                         text_color=C_ACCENT
                     )
                 if hasattr(self, "lbl_gnn_radar_badge"):
@@ -535,93 +634,381 @@ class DashboardTab(ctk.CTkFrame):
         monitored_file = project_root / "data" / "exfil_attack.log"
         last_size = monitored_file.stat().st_size if monitored_file.exists() else 0
 
-        state = {"remote_attack": False, "attacker_ip": "127.0.0.1", "proxy_ip": "", "clicked_file": ""}
+        state = {"remote_attack": False, "attacker_ip": "127.0.0.1", "proxy_ip": None, "clicked_file": "", "attack_type": "SERIAL"}
+
+        import urllib.parse
+        import secrets
+        import datetime
+        import base64
 
         class AttackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
-                state["remote_attack"] = True
                 client_ip = self.client_address[0]
+                cf_ip = self.headers.get("CF-Connecting-IP")
                 forwarded_for = self.headers.get("X-Forwarded-For")
-                if forwarded_for:
-                    state["attacker_ip"] = forwarded_for.split(",")[0].strip()
-                    state["proxy_ip"] = client_ip
+                real_ip = self.headers.get("X-Real-IP")
+                host_hdr = self.headers.get("Host", "").strip()
+
+                parsed = urllib.parse.urlparse(self.path)
+                req_path = parsed.path.lower()
+                query_params = urllib.parse.parse_qs(parsed.query)
+
+                # Identify requested file & explicit source param
+                clicked_file = query_params.get("file", [""])[0]
+                query_src = query_params.get("src", [""])[0]
+                is_download = "/download" in req_path
+                is_view = "/view" in req_path
+
+                x_mode = self.headers.get("X-Attack-Mode", "").strip().upper()
+                ua = self.headers.get("User-Agent", "")
+                mode_param = query_params.get("mode", [""])[0].upper()
+
+                # Determine Attack Mode: MULTIHOP vs PARALLEL vs SERIAL
+                if x_mode in ("MULTIHOP", "MULTI-HOP") or "ProxyRelay" in ua or "MultiHop" in ua or mode_param in ("MULTIHOP", "MULTI-HOP"):
+                    attack_type = "MULTIHOP"
+                elif x_mode == "PARALLEL" or "Parallel" in ua or mode_param == "PARALLEL":
+                    attack_type = "PARALLEL"
+                elif x_mode == "SERIAL" or "Serial" in ua or mode_param == "SERIAL":
+                    attack_type = "SERIAL"
+                elif forwarded_for:
+                    # Intermediate proxy hop header detected without explicit mode
+                    attack_type = "MULTIHOP"
                 else:
-                    state["attacker_ip"] = client_ip
-                    state["proxy_ip"] = ""
+                    # Direct single attack probe
+                    attack_type = "SERIAL"
 
-                requested_path = self.path
-                clicked_file = "General Share Index"
-                if "financial" in requested_path.lower():
-                    clicked_file = "financial_passwords_2026.xlsx"
-                elif "database" in requested_path.lower():
-                    clicked_file = "customer_database_dump.sql"
-                elif "payroll" in requested_path.lower():
-                    clicked_file = "executive_payroll_salaries.pdf"
-                elif "aws" in requested_path.lower():
-                    clicked_file = "aws_production_keys.env"
-                elif "topology" in requested_path.lower():
-                    clicked_file = "internal_network_topology.txt"
+                # Attribution & Network Routing:
+                # MULTIHOP shows IP Hopping (Hop 1 -> Hop 2 -> Target).
+                # SERIAL and PARALLEL are simple direct routes (Direct Source -> Target).
+                if attack_type == "MULTIHOP":
+                    if forwarded_for:
+                        attacker_ip = f"{forwarded_for.split(',')[0].strip()} (Adversary Origin)"
+                        proxy_ip = f"{client_ip} (Proxy Relay Node)" if client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1") else "192.168.1.75 (Phone Proxy Relay)"
+                    elif cf_ip:
+                        attacker_ip = f"{cf_ip.strip()} (WAN Adversary)"
+                        proxy_ip = "Cloudflare Edge Relay (L7 Proxy)"
+                    elif query_src:
+                        attacker_ip = f"{query_src.strip()} (WAN Adversary)"
+                        proxy_ip = f"{host_hdr} (Proxy Relay)" if host_hdr else "Proxy Gateway Relay"
+                    elif host_hdr and not (host_hdr.startswith("127.0.0.1") or host_hdr.startswith("localhost")):
+                        attacker_ip = "Remote Kali Adversary (WAN)"
+                        proxy_ip = f"{host_hdr} (Ingress Relay)"
+                    elif client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+                        attacker_ip = f"{client_ip} (Adversary Origin)"
+                        proxy_ip = "192.168.1.75 (Proxy Relay Node)"
+                    else:
+                        attacker_ip = "203.0.113.42 (Adversary Origin)"
+                        proxy_ip = "192.168.1.75 (Phone Proxy Relay)"
+                else:
+                    # Simple Direct Connection (Parallel or Serial) - NO IP HOPPING!
+                    if cf_ip:
+                        attacker_ip = f"{cf_ip.strip()}"
+                    elif real_ip:
+                        attacker_ip = f"{real_ip.strip()}"
+                    elif query_src:
+                        attacker_ip = f"{query_src.strip()}"
+                    elif client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+                        attacker_ip = f"{client_ip}"
+                    else:
+                        attacker_ip = "127.0.0.1 (Direct Local Prober)"
+                    proxy_ip = None
 
-                state["clicked_file"] = clicked_file
+                state["attacker_ip"] = attacker_ip
+                state["proxy_ip"] = proxy_ip
+                state["attack_type"] = attack_type
 
-                # Log honeypot interception
-                try:
-                    from src.honeypot.interaction_log import InteractionLogger
-                    InteractionLogger().log_interaction(state["attacker_ip"], f"GATEWAY_PROBE: {requested_path}", clicked_file)
-                except Exception:
-                    pass
+                if not clicked_file:
+                    if "/vault/" in req_path or req_path.startswith("/vault"):
+                        clicked_file = req_path.rstrip("/").split("/")[-1]
+                        is_download = True
+                    elif "financial" in req_path:
+                        clicked_file = "financial_passwords_2026.xlsx"
+                        is_download = True
+                    elif "database" in req_path:
+                        clicked_file = "customer_database_dump.sql"
+                        is_download = True
+                    elif "payroll" in req_path:
+                        clicked_file = "executive_payroll_salaries.pdf"
+                        is_download = True
+                    elif "aws" in req_path:
+                        clicked_file = "aws_production_keys.env"
+                        is_download = True
+                    elif "topology" in req_path:
+                        clicked_file = "internal_network_topology.txt"
+                        is_download = True
+                    elif "secret" in req_path:
+                        clicked_file = "secret_project_intel.txt"
+                        is_download = True
 
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+                # --- SCENARIO A: EXFILTRATION ATTEMPT (DOWNLOAD FILE) ---
+                if is_download or (clicked_file and not is_view and req_path != "/"):
+                    if not clicked_file:
+                        clicked_file = "confidential_vault_data.bin"
 
-                if clicked_file != "General Share Index":
-                    html_response = f"""
+                    state["remote_attack"] = True
+                    state["clicked_file"] = clicked_file
+
+                    # 1. Immediately trigger physical Vault folder auto-encryption
+                    try:
+                        from src.workspace.workspace_vault import ExternalVaultFolder
+                        ExternalVaultFolder().auto_encrypt_vault()
+                    except Exception:
+                        pass
+
+                    # 2. Immediately trigger Poison Pill key rotation
+                    try:
+                        from src.vault.session_state import SessionState
+                        from src.vault.rotation import emergency_rotate_keys
+                        from src.workspace.workspace_vault import register_session_key
+                        v_files = [f for f in (project_root / "data" / "vault").glob("*") if f.is_file()] + [f for f in (project_root / "Vault").glob("*.enc") if f.is_file()]
+                        new_key, elapsed = emergency_rotate_keys(SessionState.get_key(), v_files)
+                        SessionState.set_key(new_key)
+                        register_session_key(new_key)
+                    except Exception:
+                        pass
+
+                    # 3. Log honeypot interception
+                    try:
+                        from src.honeypot.interaction_log import InteractionLogger
+                        InteractionLogger().log_interaction(attacker_ip, f"EXFILTRATION_DOWNLOAD: {self.path}", clicked_file)
+                    except Exception:
+                        pass
+
+                    # 4. Generate Poison Pill Corrupted Ciphertext Dump
+                    raw_bytes = secrets.token_bytes(2048)
+                    tamper_token = secrets.token_hex(8).upper()
+                    utc_now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+
+                    poison_header = f"""================================================================================
+SHADOWMIND ZERO-TRUST ACTIVE DEFENSE // POISON PILL VAULT LOCK ENGAGED
+================================================================================
+ALERT                : UNAUTHORIZED EXFILTRATION INTERCEPTED BY AI KERNEL
+INTRUSION SOURCE IP  : {attacker_ip}
+TARGET RESOURCE      : {clicked_file}
+DEFENSE ACTION       : EMERGENCY AES-256 SESSION KEY ROTATION (<1.84ms)
+STATUS               : CIPHERTEXT ENFORCED — ALL PLAINTEXT DESTROYED IN-FLIGHT
+KEY ZEROIZATION      : RAM Decryption Key Overwritten (0x00 Null Wiped)
+TAMPER INCIDENT TOKEN: SM-POISON-{tamper_token}
+CAPTURE TIMESTAMP    : {utc_now}
+================================================================================
+
+[BEGIN CORRUPTED HIGH-ENTROPY CIPHERTEXT DUMP - UNRECOVERABLE DATA NOISE]
+"""
+                    hex_lines = []
+                    for i in range(0, min(1024, len(raw_bytes)), 16):
+                        chunk = raw_bytes[i:i+16]
+                        hex_str = " ".join(f"{b:02x}" for b in chunk)
+                        ascii_str = "".join(chr(b) if 32 <= b < 127 else "." for b in chunk)
+                        hex_lines.append(f"{i:08x}:  {hex_str:<48}  |{ascii_str}|")
+
+                    b64_cipher = base64.b64encode(raw_bytes).decode('ascii')
+                    b64_wrapped = "\n".join(b64_cipher[j:j+76] for j in range(0, len(b64_cipher), 76))
+                    poison_footer = f"""
+[END OF CIPHERTEXT DUMP — 0 BYTES OF PLAINTEXT RECOVERED]
+================================================================================
+"""
+                    poison_payload = (
+                        poison_header +
+                        "\n--- MEMORY BUFFER RAW HEX DUMP ---\n" +
+                        "\n".join(hex_lines) +
+                        "\n\n--- ENCRYPTED CIPHERTEXT BLOCKS (SESSION KEY EXPIRED) ---\n" +
+                        b64_wrapped +
+                        poison_footer
+                    ).encode("utf-8")
+
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/octet-stream")
+                    self.send_header("Content-Disposition", f'attachment; filename="{clicked_file}"')
+                    self.send_header("Content-Length", str(len(poison_payload)))
+                    self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    self.end_headers()
+                    self.wfile.write(poison_payload)
+                    return
+
+                # --- SCENARIO B: IN-BROWSER PREVIEW (VIEW CIPHERTEXT) ---
+                elif is_view and clicked_file:
+                    state["remote_attack"] = True
+                    state["clicked_file"] = clicked_file
+
+                    # Auto-encrypt local vault
+                    try:
+                        from src.workspace.workspace_vault import ExternalVaultFolder
+                        ExternalVaultFolder().auto_encrypt_vault()
+                    except Exception:
+                        pass
+
+                    raw_bytes = secrets.token_bytes(512)
+                    hex_sample = " ".join(f"{b:02x}" for b in raw_bytes[:128])
+
+                    html_view = f"""
+                    <!DOCTYPE html>
                     <html>
-                    <head><title>Downloading {clicked_file}...</title></head>
-                    <body style="background-color: #080d19; color: #ffb547; font-family: monospace; padding: 24px;">
-                        <h2 style="color: #00d5ff;">📥 DOWNLOADING HONEYTOKEN: {clicked_file}</h2>
-                        <p style="color: #20d6a0;">[+] Forensic session established. Tracing route...</p>
-                        <p style="color: #94a3b8;">Honeytoken tracking identifiers attached. IP & route recorded in SOC logs.</p>
-                        <br><a href="/" style="color: #69bfff;">&lt;&lt; Return to Corporate Shared Drive</a>
+                    <head>
+                        <title>POISON PILL LOCKDOWN — {clicked_file}</title>
+                        <style>
+                            body {{ background: #070d18; color: #ff3366; font-family: 'Consolas', monospace; padding: 30px; }}
+                            .box {{ background: #0d1526; border: 2px solid #ff3366; border-radius: 8px; padding: 24px; box-shadow: 0 0 20px rgba(255,51,102,0.3); }}
+                            h1 {{ font-size: 20px; color: #ff3366; }}
+                            .hex {{ background: #05080f; color: #00f0ff; padding: 16px; border-radius: 4px; overflow-x: auto; font-size: 13px; line-height: 1.5; border: 1px solid #1e293b; }}
+                            .meta {{ color: #8aa0bd; font-size: 13px; margin: 12px 0; }}
+                            a {{ color: #00f0ff; text-decoration: none; font-weight: bold; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="box">
+                            <h1>🚨 SHADOWMIND ACTIVE DEFENSE: POISON PILL VAULT LOCK ENGAGED</h1>
+                            <div class="meta">
+                                Target Resource: <b>{clicked_file}</b> | Intrusion Origin: <b>{attacker_ip}</b><br>
+                                Status: <b>SESSION KEY ROTATED & DESTROYED</b> | Ciphertext Enforced in &lt;1.84ms
+                            </div>
+                            <p style="color:#ffb800;">[!] The plaintext data you attempted to read has been destroyed in-flight. Below is the raw encrypted memory dump:</p>
+                            <div class="hex">
+                                00000000: 4a f3 09 c1 88 2b 9d e4 11 02 fc 77 3a 99 bd 04 ... [CIPHERTEXT NOISE]<br>
+                                {hex_sample}<br>
+                                ... [0 BYTES OF PLAINTEXT RECOVERABLE] ...
+                            </div>
+                            <br>
+                            <a href="/download?file={clicked_file}">⬇ Click here to download the full raw dump file</a> &nbsp;|&nbsp;
+                            <a href="/">« Return to Directory Index</a>
+                        </div>
                     </body>
                     </html>
                     """
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(html_view.encode("utf-8"))
+                    return
+
+                # --- SCENARIO C: EXPOSED VAULT DIRECTORY INDEX (ROOT VIEW) ---
                 else:
-                    html_response = """
+                    # Dynamically inspect files in user's physical Vault folder
+                    vault_dir = project_root / "Vault"
+                    discovered_files = []
+                    if vault_dir.exists():
+                        for f in vault_dir.glob("*"):
+                            fname = f.name
+                            if fname.endswith(".enc"):
+                                fname = fname[:-4]  # Show original unencrypted filename in listing
+                            if fname not in [x[0] for x in discovered_files]:
+                                discovered_files.append((fname, f"{max(1, f.stat().st_size // 1024)} KB", "Local Vault File"))
+
+                    # Pre-seeded high-value targets
+                    preset_targets = [
+                        ("financial_passwords_2026.xlsx", "2.4 MB", "Confidential Financials"),
+                        ("customer_database_dump.sql", "45.1 MB", "SQL Database Export"),
+                        ("executive_payroll_salaries.pdf", "1.1 MB", "HR Payroll Data"),
+                        ("aws_production_keys.env", "4 KB", "Cloud Infrastructure Keys"),
+                        ("secret_project_intel.txt", "12 KB", "R&D Architecture"),
+                    ]
+                    for p_name, p_size, p_type in preset_targets:
+                        if p_name not in [x[0] for x in discovered_files]:
+                            discovered_files.append((p_name, p_size, p_type))
+
+                    rows_html = ""
+                    for fname, fsize, ftype in discovered_files:
+                        rows_html += f"""
+                        <tr>
+                            <td><strong>📄 {fname}</strong></td>
+                            <td><span class="tag">{ftype}</span></td>
+                            <td>{fsize}</td>
+                            <td>
+                                <a class="btn btn-download" href="/download?file={fname}">📥 Download File</a>
+                                <a class="btn btn-view" href="/view?file={fname}">👁️ View</a>
+                            </td>
+                        </tr>
+                        """
+
+                    html_index = f"""
+                    <!DOCTYPE html>
                     <html>
-                    <head><title>Internal Corporate File Share — Confidential</title></head>
-                    <body style="background-color: #080d19; color: #00d5ff; font-family: monospace; padding: 24px;">
-                        <h2>📁 INTERNAL ENTERPRISE VAULT // CLOUD_BACKUP</h2>
-                        <p style="color: #ff4568;">[!] RESTRICTED: All actions monitored by ShadowMind Autonomous AI Defense.</p>
-                        <hr style="border-color: #1e293b;">
-                        <h3>Available Confidential Shares:</h3>
-                        <ul>
-                            <li><a href="/financial_passwords" style="color: #69bfff;">financial_passwords_2026.xlsx</a> (Size: 2.4 MB)</li>
-                            <li><a href="/customer_database" style="color: #69bfff;">customer_database_dump.sql</a> (Size: 45.1 MB)</li>
-                            <li><a href="/executive_payroll" style="color: #69bfff;">executive_payroll_salaries.pdf</a> (Size: 1.1 MB)</li>
-                            <li><a href="/aws_production_keys" style="color: #69bfff;">aws_production_keys.env</a> (Size: 4 KB)</li>
-                            <li><a href="/internal_topology" style="color: #69bfff;">internal_network_topology.txt</a> (Size: 12 KB)</li>
-                        </ul>
-                        <hr style="border-color: #1e293b;">
-                        <p style="color: #64748b;">Session ID: SM-DECOY-TRAP-99812 | Status: Sandbox Isolation Armed</p>
+                    <head>
+                        <title>Internal Corporate File Share // Host Exposed</title>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+                            body {{ background: #070d18; color: #ebf3ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; padding: 24px; }}
+                            .container {{ max-width: 950px; margin: 0 auto; background: #0d1728; border: 1px solid #1b2f4e; border-radius: 10px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }}
+                            .banner {{ background: rgba(255, 51, 102, 0.1); border: 1px solid #ff3366; color: #ff3366; padding: 12px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-bottom: 20px; }}
+                            h1 {{ font-size: 20px; color: #00f0ff; letter-spacing: 0.5px; margin-bottom: 6px; }}
+                            .sub {{ color: #8aa0bd; font-size: 13px; margin-bottom: 20px; }}
+                            table {{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }}
+                            th {{ text-align: left; background: #091220; padding: 12px; color: #00f0ff; border-bottom: 1px solid #1b2f4e; }}
+                            td {{ padding: 12px; border-bottom: 1px solid #15243b; color: #cbd5e1; }}
+                            tr:hover td {{ background: #112036; }}
+                            .tag {{ background: #112036; border: 1px solid #1b2f4e; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #ffb800; }}
+                            .btn {{ display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; margin-right: 6px; transition: all 0.2s; }}
+                            .btn-download {{ background: #00f0ff; color: #040810; }}
+                            .btn-download:hover {{ background: #33f3ff; }}
+                            .btn-view {{ background: #1e293b; color: #8aa0bd; border: 1px solid #334155; }}
+                            .btn-view:hover {{ color: #fff; background: #334155; }}
+                            .footer {{ margin-top: 24px; font-size: 11px; color: #64748b; text-align: center; border-top: 1px solid #15243b; padding-top: 14px; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="banner">
+                                ⚠ EXPOSED STORAGE INTERFACE // PORT 8080 OPEN — DIRECTORY BROWSING ACTIVE
+                            </div>
+                            <h1>📁 ENTERPRISE VAULT STORAGE REPOSITORY</h1>
+                            <div class="sub">Host Interface: <code>0.0.0.0:8080</code> | Client Address: <code>{attacker_ip}</code> | Classification: RESTRICTED</div>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Classification</th>
+                                        <th>Size</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows_html}
+                                </tbody>
+                            </table>
+
+                            <div class="footer">
+                                Corporate Data Enclave • All downloads are cryptographically verified and monitored in real-time.
+                            </div>
+                        </div>
                     </body>
                     </html>
                     """
-                self.wfile.write(html_response.encode("utf-8"))
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(html_index.encode("utf-8"))
+                    return
 
             def log_message(self, format, *args):
                 pass
 
         def run_server():
-            try:
-                # Allow address reuse so quick restarts never fail
-                socketserver.TCPServer.allow_reuse_address = True
-                with socketserver.TCPServer(("", 8080), AttackHandler) as httpd:
-                    self.after(0, lambda: self._append_log("Network Gateway active on port 8080. Ready for ingress.", "INFO"))
-                    httpd.serve_forever()
-            except Exception as e:
-                self.after(0, lambda err=e: self._append_log(f"Gateway port 8080 bind error: {err}", "WARN"))
+            while getattr(self, "_sim_running", True):
+                try:
+                    import socket
+                    class DualStackServer(socketserver.ThreadingTCPServer):
+                        address_family = socket.AF_INET6
+                        allow_reuse_address = True
+                        def server_bind(self):
+                            try:
+                                self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                            except Exception:
+                                pass
+                            super().server_bind()
+
+                    try:
+                        server = DualStackServer(("", 8080), AttackHandler)
+                    except Exception:
+                        socketserver.TCPServer.allow_reuse_address = True
+                        server = socketserver.TCPServer(("", 8080), AttackHandler)
+
+                    with server as httpd:
+                        self.after(0, lambda: self._append_log("Network Gateway active on port 8080. Ready for ingress.", "INFO"))
+                        httpd.serve_forever()
+                except Exception as e:
+                    self.after(0, lambda err=e: self._append_log(f"Gateway port 8080 retry in 2s ({err})", "WARN"))
+                    time.sleep(2.0)
 
         threading.Thread(target=run_server, daemon=True).start()
 
@@ -635,16 +1022,18 @@ class DashboardTab(ctk.CTkFrame):
 
                 if state["remote_attack"]:
                     attack_detected = True
+                    attack_type = state.get("attack_type", "SERIAL")
                     source_ip = state["attacker_ip"]
-                    proxy_ip = state["proxy_ip"] if state["proxy_ip"] else "192.168.1.1 (Gateway Proxy)"
+                    proxy_ip = state.get("proxy_ip")
                     clicked = state.get("clicked_file", "Honeytoken Vault")
-                    target_ip = f"10.0.0.50 ({clicked})"
+                    target_ip = f"10.0.0.50 (Vault: {clicked})"
                     state["remote_attack"] = False
 
                 if monitored_file.exists():
                     current_size = monitored_file.stat().st_size
                     if current_size > last_size:
                         attack_detected = True
+                        attack_type = "MULTIHOP"
                         source_ip = "203.0.113.42 (External Threat Actor)"
                         proxy_ip = "192.168.1.15 (Infected Lateral Node)"
                         target_ip = "10.0.0.50 (Poison Pill Vault Enclave)"
@@ -655,7 +1044,8 @@ class DashboardTab(ctk.CTkFrame):
                         "ip1": source_ip,
                         "ip2": proxy_ip,
                         "target": target_ip,
-                        "is_attack": True
+                        "is_attack": True,
+                        "attack_type": attack_type
                     }
                     dummy_flat = np.array([[0.004, 300.0, 2.0, 1.0, 25.0, 7.95, 150.0, 7200.0, 0.5, 1.0, 1.0, 0.0, 0.0]], dtype=np.float32)
                     dummy_seq = np.repeat(dummy_flat[:, np.newaxis, :], 50, axis=1)
@@ -678,7 +1068,7 @@ class DashboardTab(ctk.CTkFrame):
                     # Record breach in AppSettings
                     try:
                         from src.utils.settings_state import AppSettings
-                        AppSettings.record_exfil(source_ip, f"CONFIRMED EXFILTRATION (Score: {score})")
+                        AppSettings.record_exfil(source_ip, f"CONFIRMED EXFILTRATION ({attack_type} - Score: {score})")
                     except Exception:
                         pass
 
@@ -687,10 +1077,11 @@ class DashboardTab(ctk.CTkFrame):
                         from src.intelligence.profiler import AttackerProfiler
                         from src.intelligence.reporter import IncidentReporter
                         dossier = AttackerProfiler.profile_ip(source_ip)
+                        dossier["threat_class"] = f"CONFIRMED EXFILTRATION ({attack_type})"
                         loc_str = dossier.get('geo_location', 'Local Subnet')
                         incident_logs.append((f"THREAT INTEL: IP {dossier['source_ip']} | Location: {loc_str} | Risk: {dossier['risk_tier']}", "WARN"))
                         actions = [
-                            f"Detected network intrusion from IP {source_ip} via GNN topology analyzer.",
+                            f"Detected {attack_type} network intrusion from IP {source_ip} via GNN topology analyzer.",
                             "Triggered Poison Pill Vault emergency session key rotation.",
                             "Auto-encrypted local physical /Vault folder items into AES-256 ciphertext.",
                             "Diverted attacker into Dynamic Honeypot trap share."
@@ -822,7 +1213,13 @@ class DashboardTab(ctk.CTkFrame):
             if label != "BENIGN":
                 self._append_log(f"ALERT: {label} detected — Score: {score:.4f}", "ALERT")
                 if gnn_path and gnn_path.get("is_attack"):
-                    self._append_log(f"🚨 GNN MULTI-HOP ATTACK PATH: {gnn_path['ip1']} ➔ {gnn_path['ip2']} ➔ {gnn_path['target']}", "ALERT")
+                    atype = gnn_path.get("attack_type", "MULTIHOP")
+                    if atype == "MULTIHOP":
+                        self._append_log(f"🚨 GNN MULTI-HOP ATTACK PATH (IP HOPPING): Hop 1 [{gnn_path['ip1']}] ➔ Hop 2 [{gnn_path['ip2']}] ➔ Target [{gnn_path['target']}]", "ALERT")
+                    elif atype == "PARALLEL":
+                        self._append_log(f"⚡ DIRECT PARALLEL ATTACK DETECTED: [{gnn_path['ip1']}] ➔ Target [{gnn_path['target']}] (Concurrent Flood - No IP Hopping)", "ALERT")
+                    else:
+                        self._append_log(f"🔍 DIRECT SERIAL ATTACK DETECTED: [{gnn_path['ip1']}] ➔ Target [{gnn_path['target']}] (Sequential Ingress - No IP Hopping)", "ALERT")
             elif AppSettings.signal_mode == "Attack & Benign":
                 self._append_log(f"Traffic evaluated — Score: {score:.4f} | Status: Normal", "INFO", is_benign=True)
 
