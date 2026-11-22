@@ -1,7 +1,5 @@
 # Contribution Summary(done by sm-911)
 
-## Sourya‑Dey05/Shadowmind (upstream)
-
 | Path (relative) | Change type | Description |
 |---|---|---|
 | `parallel_attack.py` | Added | Parallel HTTP‑request stress‑test. |
