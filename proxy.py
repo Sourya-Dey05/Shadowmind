@@ -31,17 +31,23 @@ if len(sys.argv) > 1:
 else:
     print("\n⚠️  TARGET URL NOT SPECIFIED")
     print("Where should the phone forward the attack traffic? (Laptop 1 address)")
-    print("Options:")
-    print("  1. Laptop 1 Local IP : http://10.60.115.49:8080")
-    print("  2. Laptop 1 Pinggy   : e.g. http://mwghm-47-30-228-57.run.pinggy-free.link:45937")
+    print("  [1] Laptop 1 Local IP (http://10.60.115.49:8080)")
+    print("  [2] Laptop 1 Pinggy URL (Paste your Pinggy link)")
     try:
-        user_in = input("\n👉 Enter Laptop 1 URL (Press Enter for http://10.60.115.49:8080): ").strip()
-        TARGET_HOST = user_in if user_in else DEFAULT_TARGET_HOST
+        user_in = input("\n👉 Enter 1 or paste Pinggy URL (Press Enter for Option 1): ").strip()
+        if user_in in ("1", "1.", ""):
+            TARGET_HOST = "http://10.60.115.49:8080"
+        elif user_in in ("2", "2."):
+            p_link = input("👉 Paste your Pinggy URL: ").strip()
+            TARGET_HOST = p_link if p_link else "http://10.60.115.49:8080"
+        else:
+            TARGET_HOST = user_in
     except Exception:
         TARGET_HOST = DEFAULT_TARGET_HOST
     LISTEN_PORT = DEFAULT_LISTEN_PORT
 
-# Auto-convert tcp:// from Pinggy into http://
+# Clean up and normalize URL
+TARGET_HOST = TARGET_HOST.strip().rstrip('/')
 if TARGET_HOST.startswith("tcp://"):
     TARGET_HOST = "http://" + TARGET_HOST[6:]
 elif not TARGET_HOST.startswith("http://") and not TARGET_HOST.startswith("https://"):
