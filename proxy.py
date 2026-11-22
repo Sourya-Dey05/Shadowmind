@@ -22,11 +22,24 @@ import socket
 # CONFIGURATION
 # =============================================================================
 # Laptop 1's Public Cloudflare / Pinggy Tunnel URL or Local LAN IP
-DEFAULT_TARGET_HOST = "https://your-tunnel.trycloudflare.com"
+DEFAULT_TARGET_HOST = "http://10.60.115.49:8080"
 DEFAULT_LISTEN_PORT = 9000
 
-TARGET_HOST = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TARGET_HOST
-LISTEN_PORT = int(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_LISTEN_PORT
+if len(sys.argv) > 1:
+    TARGET_HOST = sys.argv[1]
+    LISTEN_PORT = int(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_LISTEN_PORT
+else:
+    print("\n⚠️  TARGET URL NOT SPECIFIED")
+    print("Where should the phone forward the attack traffic? (Laptop 1 address)")
+    print("Options:")
+    print("  1. Laptop 1 Local IP : http://10.60.115.49:8080")
+    print("  2. Laptop 1 Pinggy   : e.g. http://mwghm-47-30-228-57.run.pinggy-free.link:45937")
+    try:
+        user_in = input("\n👉 Enter Laptop 1 URL (Press Enter for http://10.60.115.49:8080): ").strip()
+        TARGET_HOST = user_in if user_in else DEFAULT_TARGET_HOST
+    except Exception:
+        TARGET_HOST = DEFAULT_TARGET_HOST
+    LISTEN_PORT = DEFAULT_LISTEN_PORT
 
 # Auto-convert tcp:// from Pinggy into http://
 if TARGET_HOST.startswith("tcp://"):
