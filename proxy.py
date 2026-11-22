@@ -28,6 +28,12 @@ DEFAULT_LISTEN_PORT = 9000
 TARGET_HOST = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TARGET_HOST
 LISTEN_PORT = int(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_LISTEN_PORT
 
+# Auto-convert tcp:// from Pinggy into http://
+if TARGET_HOST.startswith("tcp://"):
+    TARGET_HOST = "http://" + TARGET_HOST[6:]
+elif not TARGET_HOST.startswith("http://") and not TARGET_HOST.startswith("https://"):
+    TARGET_HOST = "http://" + TARGET_HOST
+
 def get_phone_ip():
     """Detect the phone's primary network IP address."""
     try:

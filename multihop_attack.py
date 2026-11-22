@@ -38,8 +38,10 @@ elif len(sys.argv) == 2:
 else:
     PROXY_URL = DEFAULT_PHONE_PROXY
 
-# Normalize URL
-if not PROXY_URL.startswith("http://") and not PROXY_URL.startswith("https://"):
+# Normalize URL (Auto-convert tcp:// from Pinggy into http://)
+if PROXY_URL.startswith("tcp://"):
+    PROXY_URL = "http://" + PROXY_URL[6:]
+elif not PROXY_URL.startswith("http://") and not PROXY_URL.startswith("https://"):
     PROXY_URL = f"http://{PROXY_URL}"
 
 # --- EDIT OR ADD FILES TO FETCH FROM THE VAULT HERE ---

@@ -27,13 +27,20 @@ if len(sys.argv) > 2:
     TARGET_URL = sys.argv[1]
     custom_file = sys.argv[2]
 elif len(sys.argv) == 2:
-    if sys.argv[1].startswith("http://") or sys.argv[1].startswith("https://"):
-        TARGET_URL = sys.argv[1]
+    arg1 = sys.argv[1]
+    if arg1.startswith("http://") or arg1.startswith("https://") or arg1.startswith("tcp://") or ":" in arg1:
+        TARGET_URL = arg1
     else:
         TARGET_URL = DEFAULT_TARGET_URL
-        custom_file = sys.argv[1]
+        custom_file = arg1
 else:
     TARGET_URL = DEFAULT_TARGET_URL
+
+# Normalize URL (Auto-convert tcp:// from Pinggy into http://)
+if TARGET_URL.startswith("tcp://"):
+    TARGET_URL = "http://" + TARGET_URL[6:]
+elif not TARGET_URL.startswith("http://") and not TARGET_URL.startswith("https://"):
+    TARGET_URL = "http://" + TARGET_URL
 
 # --- EDIT OR ADD FILES TO FETCH FROM THE VAULT SIMULTANEOUSLY ---
 VAULT_FILES = [
