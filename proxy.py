@@ -51,7 +51,9 @@ def get_phone_ip():
 class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         target_url = f"{TARGET_HOST.rstrip('/')}{self.path}"
-        attacker_ip = self.client_address[0]
+        attacker_ip = self.headers.get("X-Real-IP") or self.headers.get("X-Forwarded-For") or self.client_address[0]
+        if attacker_ip.startswith("::ffff:"):
+            attacker_ip = attacker_ip[7:]
         
         print(f"\n[HOP 2 RELAY] ➔ Intercepted Probe from Attacker IP: {attacker_ip}")
         print(f"              Relaying to Target Vault : {target_url}")
@@ -61,6 +63,7 @@ class MultiHopProxyHandler(http.server.BaseHTTPRequestHandler):
             "User-Agent": "ShadowMind-ProxyRelay/2.0",
             "X-Attack-Mode": "MultiHop",
             "X-Forwarded-For": attacker_ip,
+            "X-Real-IP": attacker_ip,
             "Accept": "*/*"
         }
         

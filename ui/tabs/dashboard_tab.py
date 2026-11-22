@@ -644,9 +644,12 @@ class DashboardTab(ctk.CTkFrame):
         class AttackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 client_ip = self.client_address[0]
+                if client_ip.startswith("::ffff:"):
+                    client_ip = client_ip[7:]
+
                 cf_ip = self.headers.get("CF-Connecting-IP")
                 forwarded_for = self.headers.get("X-Forwarded-For")
-                real_ip = self.headers.get("X-Real-IP")
+                real_ip = self.headers.get("X-Real-IP") or self.headers.get("X-Origin-IP") or self.headers.get("X-Client-IP")
                 host_hdr = self.headers.get("Host", "").strip()
 
                 parsed = urllib.parse.urlparse(self.path)
@@ -683,17 +686,20 @@ class DashboardTab(ctk.CTkFrame):
                 if attack_type == "MULTIHOP":
                     if forwarded_for:
                         attacker_ip = f"{forwarded_for.split(',')[0].strip()} (Adversary Origin)"
-                        proxy_ip = f"{client_ip} (Proxy Relay Node)" if client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1") else "192.168.1.75 (Phone Proxy Relay)"
+                        proxy_ip = f"{client_ip} (Proxy Relay Node)" if client_ip not in ("127.0.0.1", "::1") else "192.168.1.75 (Phone Proxy Relay)"
+                    elif real_ip:
+                        attacker_ip = f"{real_ip.strip()} (Adversary Origin)"
+                        proxy_ip = f"{client_ip} (Proxy Relay Node)" if client_ip not in ("127.0.0.1", "::1") else "Proxy Relay"
+                    elif query_src:
+                        attacker_ip = f"{query_src.strip()} (Adversary Origin)"
+                        proxy_ip = f"{client_ip} (Proxy Relay Node)" if client_ip not in ("127.0.0.1", "::1") else "Proxy Relay"
                     elif cf_ip:
                         attacker_ip = f"{cf_ip.strip()} (WAN Adversary)"
                         proxy_ip = "Cloudflare Edge Relay (L7 Proxy)"
-                    elif query_src:
-                        attacker_ip = f"{query_src.strip()} (WAN Adversary)"
-                        proxy_ip = f"{host_hdr} (Proxy Relay)" if host_hdr else "Proxy Gateway Relay"
                     elif host_hdr and not (host_hdr.startswith("127.0.0.1") or host_hdr.startswith("localhost")):
                         attacker_ip = "Remote Kali Adversary (WAN)"
                         proxy_ip = f"{host_hdr} (Ingress Relay)"
-                    elif client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+                    elif client_ip not in ("127.0.0.1", "::1"):
                         attacker_ip = f"{client_ip} (Adversary Origin)"
                         proxy_ip = "192.168.1.75 (Proxy Relay Node)"
                     else:
@@ -701,13 +707,14 @@ class DashboardTab(ctk.CTkFrame):
                         proxy_ip = "192.168.1.75 (Phone Proxy Relay)"
                 else:
                     # Simple Direct Connection (Parallel or Serial) - NO IP HOPPING!
-                    if cf_ip:
-                        attacker_ip = f"{cf_ip.strip()}"
-                    elif real_ip:
+                    # Prioritize the attacker's actual IP from client headers or query param over tunnel loopback:
+                    if real_ip and real_ip.strip():
                         attacker_ip = f"{real_ip.strip()}"
-                    elif query_src:
+                    elif query_src and query_src.strip():
                         attacker_ip = f"{query_src.strip()}"
-                    elif client_ip not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+                    elif cf_ip and cf_ip.strip():
+                        attacker_ip = f"{cf_ip.strip()}"
+                    elif client_ip and client_ip not in ("127.0.0.1", "::1"):
                         attacker_ip = f"{client_ip}"
                     else:
                         attacker_ip = "127.0.0.1 (Direct Local Prober)"

