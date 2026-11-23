@@ -46,6 +46,8 @@ class AttackerProfiler:
         Enrich an IP address with threat intelligence.
         Queries ipstack for public IPs, and provides robust classification for local LAN/loopback.
         """
+        if ip_address.startswith("::ffff:"):
+            ip_address = ip_address[7:]
         now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         
         # Default fallback values

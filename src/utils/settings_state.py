@@ -19,6 +19,8 @@ class AppSettings:
 
     @classmethod
     def record_exfil(cls, ip: str, status: str, timestamp: str = None):
+        if ip and ip.startswith("::ffff:"):
+            ip = ip[7:]
         cls.last_exfil_time = timestamp or datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         cls.last_exfil_ip = ip
         cls.last_exfil_status = status
@@ -35,16 +37,21 @@ class AppSettings:
             Path(__file__).resolve().parents[2] / "data" / "reports",
         ]
         
+        seen_paths = set()
         reports = []
         for d in possible_dirs:
             if d.exists():
-                reports.extend(list(d.glob("Incident_Report_*.txt")))
+                for p in d.glob("Incident_Report_*.txt"):
+                    resolved = str(p.resolve())
+                    if resolved not in seen_paths:
+                        seen_paths.add(resolved)
+                        reports.append(p)
                 
         if not reports:
             return False
 
-        # Sort by modification time and filename descending
-        reports.sort(key=lambda p: (p.stat().st_mtime, p.name), reverse=True)
+        # Sort primarily by the filename's ISO timestamp descending (Incident_Report_YYYYMMDD_HHMMSS.txt)
+        reports.sort(key=lambda p: p.name, reverse=True)
         latest_report = reports[0]
 
         try:
@@ -59,7 +66,10 @@ class AppSettings:
                 if "Generated (UTC):" in line_str:
                     ts = line_str.split("Generated (UTC):", 1)[1].strip()
                 elif "- Source IP Address" in line_str:
-                    ip = line_str.split(":", 1)[1].strip()
+                    raw_ip = line_str.split(":", 1)[1].strip()
+                    if raw_ip.startswith("::ffff:"):
+                        raw_ip = raw_ip[7:]
+                    ip = raw_ip
                 elif "- Threat Classification" in line_str:
                     status = line_str.split(":", 1)[1].strip()
                 elif "- Model Confidence" in line_str:

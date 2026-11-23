@@ -36,6 +36,10 @@ class IncidentReporter:
         report_filename = f"Incident_Report_{timestamp_str}.txt"
         report_path = self.reports_dir / report_filename
 
+        src_ip = str(dossier.get('source_ip', 'N/A'))
+        if src_ip.startswith("::ffff:"):
+            src_ip = src_ip[7:]
+
         content = f"""======================================================================
  SHADOWMIND AUTONOMOUS SECURITY INCIDENT FORENSIC REPORT
 ======================================================================
@@ -45,7 +49,7 @@ Classification: RESTRICTED // SOC EYES ONLY
 ----------------------------------------------------------------------
 
 1. ATTACKER RECONNAISSANCE & ATTRIBUTION
-   - Source IP Address      : {dossier.get('source_ip', 'N/A')}
+   - Source IP Address      : {src_ip}
    - Estimated Location     : {dossier.get('geo_location', 'N/A')}
    - Network Origin         : {dossier.get('network_type', 'N/A')}
    - ASN / Organization     : {dossier.get('asn', 'N/A')}

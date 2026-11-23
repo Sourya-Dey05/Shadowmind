@@ -55,6 +55,16 @@ class IncidentsTab(ctk.CTkFrame):
         self._build()
         self._refresh_reports_list()
         self._profile_ip("203.0.113.42")  # default initial profile view
+        self._auto_poll_loop()
+
+    def _auto_poll_loop(self):
+        try:
+            if hasattr(self, 'lbl_last_ip'):
+                AppSettings.sync_from_latest_report()
+                self.lbl_last_ip.configure(text=AppSettings.last_exfil_ip)
+        except Exception:
+            pass
+        self.after(2500, self._auto_poll_loop)
 
     def _build(self):
         self.grid_columnconfigure((0, 1), weight=1)

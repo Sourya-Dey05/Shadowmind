@@ -48,6 +48,18 @@ class SettingsTab(ctk.CTkFrame):
             self.cfg = yaml.safe_load(f)
 
         self._build()
+        self._auto_poll_loop()
+
+    def _auto_poll_loop(self):
+        try:
+            if hasattr(self, "time_lbl") and hasattr(self, "ip_lbl") and hasattr(self, "status_lbl"):
+                AppSettings.sync_from_latest_report()
+                self.time_lbl.configure(text=f"Timestamp: {AppSettings.last_exfil_time}")
+                self.ip_lbl.configure(text=f"Attacker IP: {AppSettings.last_exfil_ip}")
+                self.status_lbl.configure(text=f"Status: {AppSettings.last_exfil_status}")
+        except Exception:
+            pass
+        self.after(2500, self._auto_poll_loop)
 
     def tkraise(self, above_this=None):
         super().tkraise(above_this)
